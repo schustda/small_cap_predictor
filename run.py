@@ -92,7 +92,7 @@ class DailyPrediction(TrainingData):
         while True:
             # rc = subprocess.call('src/scripts/git_pull.sh',shell=True)
             interval_time = time()
-            # self._update()
+            self._update()
             buy = self._make_predictions()
             if len(buy) > 0:
                 self._email_results(buy)

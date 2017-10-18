@@ -2,15 +2,18 @@ import pandas as pd
 import numpy as np
 import datetime
 from math import isnan
-from src.data.define_target import DefineTarget
 import pathlib
+from src.data.define_target import DefineTarget
+from src.data.split_file_size import SplitFile
 
 
-class CombineData(object):
+
+class CombineData(SplitFile):
 
     def __init__(self):
-        self.message_board_posts = pd.read_csv('data/tables/message_board_posts.csv',index_col=0)
-        self.stock_prices = pd.read_csv('data/tables/stock_prices.csv',index_col='Date')
+        super().__init__()
+        self.message_board_posts = self.load_file('message_board_posts')
+        self.stock_prices = self.load_file('stock_prices')
         self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
             index_col='key')
 

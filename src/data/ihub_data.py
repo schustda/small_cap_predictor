@@ -3,16 +3,15 @@ import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 from time import time
+from src.data.split_file_size import SplitFile
 
-class IhubData(object):
+class IhubData(SplitFile):
 
     def __init__(self, verbose = 0, update_single=[]):
+        super().__init__()
         self.verbose = verbose
         self.update_single = update_single
-        try:
-            self.post_data = pd.read_csv('data/tables/message_board_posts.csv',index_col=0)
-        except:
-            self.post_data = pd.DataFrame(columns=['post_number','date','symbol'])
+        self.post_data = self.load_file('message_board_posts')
         if self.update_single != []:
             self.ticker_symbols = pd.DataFrame(update_single).T
             self.ticker_symbols.columns = ['symbol','url']
@@ -117,18 +116,22 @@ class IhubData(object):
     def _replace_bad_link(self, symbol, url):
         _,error_list = self._get_page(url,most_recent=True)
         idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index[0]
+
         if len(error_list) != 0:
             url_lst = url.split('-')
             symbol_idx = url_lst.index(symbol.upper())
             url_lst[symbol_idx] += 'D'
             url_new = "-".join(url_lst)
             _,error_list = self._get_page(url_new,most_recent=True)
+
             if len(error_list) != 0:
                 url_lst[symbol_idx] = url_lst[symbol_idx][:-2]
                 url_new = "-".join(url_lst)
                 _,error_list = self._get_page(url_new,most_recent=True)
+
                 if len(error_list) != 0:
                     print ('LINK BROKEN')
+
                 else:
                     # stock no longer has a D at the end
                     self.ticker_symbols.loc[idx].symbol = symbol[:-1]
@@ -230,7 +233,7 @@ class IhubData(object):
 
         self.post_data.sort_values(['symbol','post_number'],inplace=True)
         self.post_data.reset_index(inplace=True,drop=True)
-        self.post_data.to_csv('data/tables/message_board_posts.csv')
+        self.save_file('message_board_posts',self.post_data)
 
 if __name__ == '__main__':
     data = IhubData(verbose = 1)

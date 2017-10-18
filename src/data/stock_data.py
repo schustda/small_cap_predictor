@@ -1,9 +1,13 @@
 import pandas as pd
 import datetime as dt
+from src.data.split_file_size import SplitFile
 
-class StockData(object):
+
+class StockData(SplitFile):
 
     def __init__(self, update_single=[]):
+
+        super().__init__()
         self.update_single = update_single
         if self.update_single != []:
             self.ticker_symbols = pd.DataFrame(update_single).T
@@ -79,7 +83,8 @@ class StockData(object):
         first = True
         print ('Getting stock price history for:')
         if self.update_single != []:
-            self.stock_data = pd.read_csv('data/tables/stock_prices.csv',index_col='Date')
+            # self.stock_data = pd.read_csv('data/tables/stock_prices.csv',index_col='Date')
+            self.stock_data = self.load_file('stock_prices')
             first = False
         for _, stock in self.ticker_symbols.iterrows():
             symbol = stock['symbol']
@@ -100,7 +105,7 @@ class StockData(object):
             else:
                 self.stock_data = pd.concat([self.stock_data,df])
 
-        self.stock_data.to_csv('data/tables/stock_prices.csv')
+        self.save_file('stock_prices',self.stock_data)
 
 if __name__ == '__main__':
 
