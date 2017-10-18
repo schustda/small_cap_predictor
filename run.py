@@ -90,7 +90,7 @@ class DailyPrediction(TrainingData):
 
     def update_and_predict(self):
         while True:
-            # rc = subprocess.call('src/scripts/git_pull.sh',shell=True)
+            rc = subprocess.call('src/scripts/git_pull.sh',shell=True)
             interval_time = time()
             self._update()
             buy = self._make_predictions()
@@ -98,6 +98,7 @@ class DailyPrediction(TrainingData):
                 self._email_results(buy)
                 self._update_log(buy)
 
+            rc = subprocess.call('src/scripts/git_add_data.sh',shell=True)
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':
