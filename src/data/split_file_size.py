@@ -26,6 +26,6 @@ class SplitFile(object):
             df[break_lst[i]:break_lst[i+1]].to_csv('data/tables/{0}{1}.csv'.format(f,i))
 
 if __name__ == '__main__':
-    mbp = pd.read_csv('data/tables/message_board_posts.csv',index_col=0)
     sf = SplitFile()
-    sf.save_file('message_board_posts',mbp)
+    mbp = sf.load_file('message_board_posts')
+    # sf.save_file('message_board_posts',mbp)
