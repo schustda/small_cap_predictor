@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from sys import argv
-from time import time,sleep
+from time import time,sleep, gmtime
 from datetime import datetime as dt
 from email.mime.text import MIMEText
 from sklearn.externals import joblib
@@ -89,6 +89,9 @@ class DailyPrediction(TrainingData):
         server.quit()
 
     def update_and_predict(self):
+        while gmtime().tm_hour != 6:
+            # print (gmtime().tm_hour)
+            sleep(3600)
         while True:
             rc = subprocess.call('scripts/git_pull.sh',shell=True)
             interval_time = time()
