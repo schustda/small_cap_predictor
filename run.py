@@ -89,19 +89,22 @@ class DailyPrediction(TrainingData):
         server.quit()
 
     def update_and_predict(self):
-        # while gmtime().tm_hour != 6:
+        while gmtime().tm_hour != 6:
             # print (gmtime().tm_hour)
-            # sleep(3600)
+            sleep(3600)
         while True:
-            rc = subprocess.call('scripts/git_pull.sh',shell=True)
-            interval_time = time()
-            self._update()
-            buy = self._make_predictions()
-            if len(buy) > 0:
-                self._email_results(buy)
-                self._update_log(buy)
+            if gmtime().tm_wday in [5,6]:
+                pass
+            else:
+                rc = subprocess.call('scripts/git_pull.sh',shell=True)
+                interval_time = time()
+                self._update()
+                buy = self._make_predictions()
+                if len(buy) > 0:
+                    self._email_results(buy)
+                    self._update_log(buy)
 
-            rc = subprocess.call('scripts/git_add_data.sh',shell=True)
+                rc = subprocess.call('scripts/git_add_data.sh',shell=True)
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':
