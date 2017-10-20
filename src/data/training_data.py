@@ -119,7 +119,7 @@ class TrainingData(object):
         elif self.method == 'random_oversampling':
             print ('Times to resample : {0}'.format(self.times_to_resample))
         t, original_time = time(), time()
-        data = pd.read_csv('data/data/_all.csv')
+        data = pd.read_csv('data/tables/combined_data.csv')
         points = self._get_points(data)
         print ('{0} training points'.format(len(points)))
         print ('Transforming feature space...')

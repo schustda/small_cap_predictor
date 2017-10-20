@@ -83,9 +83,9 @@ class IhubData(SplitFile):
             URL += "/?NextStart="+str(post_number)
         content = requests.get(URL).content
         soup = BeautifulSoup(content, "lxml")
-        rows = list(soup.find('table', id="ctl00_CP1_gv"))
-        table = []
         try:
+            rows = list(soup.find('table', id="ctl00_CP1_gv"))
+            table = []
             for row in rows[(2+num_pinned):-2]:
                 cell_lst = [cell for cell in list(row)[1:5]]
                 table.append(cell_lst)

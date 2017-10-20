@@ -5,11 +5,8 @@ from src.data.stock_data import StockData
 
 if __name__ == '__main__':
 
-    # symbol = input('What is the symbol?  ')
-    # url = input('What is the ihub message board url?  ')
-
-    symbol = 'frfs'
-    url = 'Firefish-Inc-FRFS-24668'
+    symbol = input('What is the symbol?  ')
+    url = input('What is the ihub message board url?  ')
 
     rc = subprocess.call('scripts/git_pull.sh',shell=True)
 
