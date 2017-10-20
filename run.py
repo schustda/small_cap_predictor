@@ -32,7 +32,7 @@ class DailyPrediction(TrainingData):
         log.to_csv('log/prediction_log.csv')
 
     def _update(self):
-        mbp = IhubData()
+        mbp = IhubData(verbose=1)
         mbp.pull_posts()
 
         sp = StockData()
@@ -89,9 +89,9 @@ class DailyPrediction(TrainingData):
         server.quit()
 
     def update_and_predict(self):
-        while gmtime().tm_hour != 6:
+        # while gmtime().tm_hour != 6:
             # print (gmtime().tm_hour)
-            sleep(3600)
+            # sleep(3600)
         while True:
             rc = subprocess.call('scripts/git_pull.sh',shell=True)
             interval_time = time()
