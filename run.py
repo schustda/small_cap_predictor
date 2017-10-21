@@ -89,15 +89,16 @@ class DailyPrediction(TrainingData):
         server.quit()
 
     def update_and_predict(self):
+        # can start program at any time, but will only run between 12-1am
         while gmtime().tm_hour != 6:
             # print (gmtime().tm_hour)
             sleep(3600)
         while True:
+            interval_time = time()
             if gmtime().tm_wday in [5,6]:
                 pass
             else:
                 rc = subprocess.call('scripts/git_pull.sh',shell=True)
-                interval_time = time()
                 self._update()
                 buy = self._make_predictions()
                 if len(buy) > 0:
