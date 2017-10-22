@@ -1,108 +1,42 @@
-# Penny-Stock-Predictor
+![Dropwizard](./images/logo.jpg)
 
-FINAL MODEL SCORE ON HOLDOUT SET (XGBoost)
-* AUC: 0.89
-* Recall: 0.74
-* Precision: 0.66
+This repository contains an algorithm to predict a 'buy' signal for an assortment of small cap stocks.
 
+## Getting Started
 
+All you need is an active Gmail account and installation of python 3. The application will need to be continuously running so utilizing an instance on the cloud will aid.
 
-Tasks:
-* Refine the target and make sure there are no outliers - COMPLETE
-* Begin running top_board / breakout_boards updater - COMPLETE
-* Re-visit target definition
-* Add top boards within the compiler - not till a later date...
-* Create log for AWS instance to update
-*
+### Prerequisites
 
+On your Gmail account, ensure that 'Allow less secure apps is set to: ON'. Doing so can be done here: https://myaccount.google.com/lesssecureapps?pli=1
 
+### Instructions for use:
 
+Open a terminal instance and navigate to the directory where the repository is saved then type:
 
-Questions:
+`python run.py`
 
-Q: How do I choosed which points to select for the training data?
+Then enter your email address and password when prompted.
 
-A: Have three options remaining. Choose all points, or have a percentage
-of possible points
+### Authors
 
+* **Douglas Schuster** - [schustda](https://github.com/schustda)
 
-Q: How do I treat weekends and market holidays?
+### Data Sources
+* [Fidelity](https://www.fidelity.com/)
+* [InvestorsHub](http://investorshub.advfn.com)
 
-A: Remove them. The message boards are much less active on those days.
+## Versioning
 
+Version 1 created 09/27/2017 (XGboost)
 
-### GOAL:
-Predict a massive change in stock price for a given small cap stock
-### DATA SETS :
-* Web-scraped data from http://investorshub.advfn.com/
-* Past stock prices and volume
-
-### MY APPROACH:
-* Web scrape data from iHub
-* Compile with historical stock data
-* Create algorithm to determine success for target
-
-### MODEL
-* Feature Space:
-    * prior stock volume
-    * prior iHub message frequency
-    * iHub 'Most Read'
-    * iHub 'Breakout Boards'
-* Target:
-    * ‘buy’ (1) : a significant stock price change is upcoming
-    * ‘no buy’ (0): no significant stock price change is upcoming
-
-
-
-
-
-##### Data Folder Structure
+### Model Performance
 
 ```
--- data
-
-    -- raw_data
-        -- ihub
-            -- message_boards
-            -- top_boards
-            -- breakout_boards
-        -- stock
-            -- {raw stock data}
-
-    -- data
-        -- compiled data
+AUC Score: 0.89
+Recall: 0.74
+Precision: 0.66
 ```
-
-##### SRC Folder Structure
-
-```
--- src
-
-    -- data_management
-        -- ihub_data.py
-            INPUT: Ticker Symbol
-            OUTPUT: create/update the data/raw_data/ihub folder
-        -- stock_data.py
-            INPUT: Ticker Symbol
-            OUTPUT: create/update the data/raw_data/stock folder
-        -- compile_data.py
-            INPUT: None
-            OUTPUT: combined/manipulated data
-
-    -- model
-        -- model.py
-            INPUT: data from the model_data folder
-            OUTPUT: model
-
-    -- data_visualization
-        -- tbd
-
-    -- web_app
-        -- tbd
-
-```
-
-
-Sources:
+### Sources:
 
 http://www.marcoaltini.com/blog/dealing-with-imbalanced-data-undersampling-oversampling-and-proper-cross-validation
