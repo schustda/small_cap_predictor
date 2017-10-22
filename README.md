@@ -1,5 +1,7 @@
 ![Dropwizard](./images/logo.jpg)
 
+## About
+
 This repository contains an algorithm to predict a 'buy' signal for an assortment of small cap stocks.
 
 ## Getting Started
