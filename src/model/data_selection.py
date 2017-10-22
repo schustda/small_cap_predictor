@@ -1,16 +1,16 @@
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import roc_auc_score,recall_score,precision_score
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
-
-import xgboost as xgb
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 import numpy as np
+import pandas as pd
+import seaborn as sns
+import xgboost as xgb
+from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 from src.data.training_data import CreateTrainingData
+from sklearn.metrics import roc_auc_score,recall_score,precision_score
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+
 
 class DataSelection(CreateTrainingData):
     def __init__(self,param,units,param2 = 0,units2 = 0):
@@ -142,11 +142,11 @@ class DataSelection(CreateTrainingData):
             self.generate_training_data()
             self._train_models(idx+1)
 
-
         if self.param2 != 0:
             title = self.units2
         else:
             title = self.param
+
         for score_type in ['auc','recall','precision']:
 
             print ('plotting {0} charts'.format(score_type))
@@ -160,12 +160,17 @@ class DataSelection(CreateTrainingData):
             sns.despine(left=True,bottom=True)
 
             # Plot results
-            self._plot(ax[0,0],self.lr,score_type)
-            self._plot(ax[1,0],self.dt,score_type)
-            self._plot(ax[0,1],self.rf,score_type)
-            self._plot(ax[1,1],self.gb,score_type)
-            self._plot(ax[0,2],self.svc,score_type)
-            self._plot(ax[1,2],self.xgb,score_type)
+            plot_lst = [
+            [ax[0,0],self.lr],
+            [ax[1,0],self.dt],
+            [ax[0,1],self.rf],
+            [ax[1,1],self.gb],
+            [ax[0,2],self.svc],
+            [ax[1,2],self.xgb],
+            ]
+
+            for axis,model in plot_lst:
+                self._plot(axis,model,score_type)
 
             plt.savefig('images/model_development/data_selection/{0}/{1}.jpg'
                 .format(title,score_type))

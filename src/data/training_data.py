@@ -1,11 +1,13 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from time import time
 from random import sample,choices
 from sklearn.preprocessing import normalize
 from sklearn.model_selection import train_test_split
-from time import time
+from src.general_functions import GeneralFunctions
 
-class TrainingData(object):
+
+class TrainingData(GeneralFunctions):
 
     def __init__(self, num_days = 50, num_points = 1000, days_avg = 1,
                     errors = 'ignore', method='all', percentage=1,
@@ -72,17 +74,6 @@ class TrainingData(object):
 
         return points
 
-    def _verbose(self, percent, original_time, time_elapsed):
-        '''
-        Method displays progress of retriving message board posts
-        '''
-        a = int(percent/2)
-        b = 50-a
-        if percent == 0:
-            percent = 0.5
-        min_rem = int(time_elapsed/percent*(100-percent)/60)
-        print ('|{0}{1}| {2}% - {3} minute(s) remaining'.format(a*'=',b*'-',str(percent),str(min_rem)))
-
     def _get_data_point(self,index,data):
         data_point = np.empty(self.feature_length)
         #Posts
@@ -118,7 +109,7 @@ class TrainingData(object):
             print ('Percentage : {0}'.format(self.percentage))
         elif self.method == 'random_oversampling':
             print ('Times to resample : {0}'.format(self.times_to_resample))
-        t, original_time = time(), time()
+        self.interval_time, self.original_time = time(), time()
         data = pd.read_csv('data/tables/combined_data.csv')
         points = self._get_points(data)
         print ('{0} training points'.format(len(points)))
@@ -127,12 +118,8 @@ class TrainingData(object):
         for num,point in enumerate(points):
             stock_array[num] = self._get_data_point(point,data)
             if self.verbose:
-                # Display update ever 60 seconds
-                if time() > t + 60:
-                    percent = int(num/len(points)*100)
-                    time_elapsed = time() - original_time
-                    self._verbose(percent, original_time, time_elapsed)
-                    t = time()
+                percent = int(num/len(points)*100)
+                self.status_update(percent)
 
         # if first == True:
         #     full_dataset = stock_array
@@ -149,7 +136,7 @@ if __name__ == '__main__':
 
     # td = CreateTrainingData(num_days = 100, days_avg = 1,method = 'random_oversampling',
     #                         times_to_resample = 20)
-    td = CreateTrainingData(num_days = 1200, days_avg = 12,method = 'random_undersampling',
+    td = TrainingData(num_days = 1200, days_avg = 12,method = 'random_undersampling',
                 percentage = 0.2)
     td.generate_training_data()
 

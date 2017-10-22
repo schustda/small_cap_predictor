@@ -110,9 +110,13 @@ class DailyPrediction(TrainingData):
 
 if __name__ == '__main__':
 
+    username = input('Gmail Address: ')
+    password = input('Gmail Password: ')
+
+
     num_days = 1200
     days_avg = 12
     threshold = 0.2
     p  = DailyPrediction(num_days = num_days,days_avg=days_avg,threshold=threshold,
-    email_address = argv[1], password = argv[2])
+    email_address = username, password = password)
     p.update_and_predict()

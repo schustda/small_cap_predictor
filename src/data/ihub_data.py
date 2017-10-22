@@ -1,13 +1,13 @@
 import requests
-import pandas as pd
 import numpy as np
-from bs4 import BeautifulSoup
+import pandas as pd
 from time import time
-from src.data.split_file_size import SplitFile
+from bs4 import BeautifulSoup
+from src.general_functions import GeneralFunctions
 
-class IhubData(SplitFile):
+class IhubData(GeneralFunctions):
 
-    def __init__(self, verbose = 0, update_single=[]):
+    def __init__(self, verbose=0, update_single=[]):
         super().__init__()
         self.verbose = verbose
         self.update_single = update_single
@@ -96,23 +96,6 @@ class IhubData(SplitFile):
             error_list.append(post_number)
             return pd.DataFrame(), error_list
 
-    def _verbose(self,num,number_of_pages):
-        '''
-        Method displays progress of retriving message board posts
-        '''
-
-        # Display update ever 60 seconds
-        if time() > self.interval_time + 60:
-            percent = int(num/number_of_pages*100)
-            time_elapsed = time() - self.original_time
-            a = int(percent/2)
-            b = 50-a
-            if percent == 0:
-                percent = 0.5
-            min_rem = int(time_elapsed/percent*(100-percent)/60)
-            print ('|{0}{1}| {2}% - {3} minute(s) remaining'.format(a*'=',b*'-',str(percent),str(min_rem)))
-            self.interval_time = time()
-
     def _replace_bad_link(self, symbol, url):
         _,error_list = self._get_page(url,most_recent=True)
         idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index[0]
@@ -146,7 +129,6 @@ class IhubData(SplitFile):
             print ('LINK WORKING')
             #revise stock list
 
-
     def _add_deleted_posts(self, df, start, end):
         '''
         Parameters
@@ -164,9 +146,7 @@ class IhubData(SplitFile):
 
         #get missing post numbers
         deleted_post_set = set(range(start,end+1)).difference(set(df.post_number))
-        if len(deleted_post_set) == 0:
-            pass
-        else:
+        if len(deleted_post_set) != 0:
             #create df with deleted posts
             df_deleted = pd.DataFrame(np.nan, index=range(len(deleted_post_set)), columns=df.columns.tolist())
             df_deleted.post_number = deleted_post_set
@@ -211,7 +191,8 @@ class IhubData(SplitFile):
                 else:
                     new_posts = pd.concat([new_posts,page_df])
                 if self.verbose:
-                    self._verbose(num,number_of_pages)
+                    percent = int(num/number_of_pages*100)
+                    self.status_update(percent)
 
             final_error_list = []
             shallow_error_list = list(error_list)
