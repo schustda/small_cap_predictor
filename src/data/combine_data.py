@@ -4,11 +4,11 @@ import datetime
 from math import isnan
 import pathlib
 from src.data.define_target import DefineTarget
-from src.data.split_file_size import SplitFile
+from src.general_functions import GeneralFunctions
 
 
 
-class CombineData(SplitFile):
+class CombineData(GeneralFunctions):
 
     def __init__(self):
         super().__init__()
