@@ -1,10 +1,10 @@
 ![Dropwizard](./images/logo.jpg)
 
-## About
+### About
 
 This repository contains an algorithm to predict a 'buy' signal for an assortment of small cap stocks.
 
-## Getting Started
+### Getting Started
 
 All you need is an active Gmail account and installation of python 3. The application will need to be continuously running so utilizing an instance on the cloud will aid.
 
@@ -28,7 +28,7 @@ Then enter your email address and password when prompted.
 * [Fidelity](https://www.fidelity.com/)
 * [InvestorsHub](http://investorshub.advfn.com)
 
-## Versioning
+### Versioning
 
 Version 1 created 09/27/2017 (XGboost)
 
