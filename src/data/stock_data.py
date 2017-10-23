@@ -1,9 +1,9 @@
 import pandas as pd
 import datetime as dt
-from src.data.split_file_size import SplitFile
+from src.general_functions import GeneralFunctions
 
 
-class StockData(SplitFile):
+class StockData(GeneralFunctions):
 
     def __init__(self, update_single=[]):
 
