@@ -90,9 +90,9 @@ class DailyPrediction(TrainingData):
 
     def update_and_predict(self):
         # can start program at any time, but will only run between 12-1am
-        while gmtime().tm_hour != 6:
+        #while gmtime().tm_hour != 6:
             # print (gmtime().tm_hour)
-            sleep(3600)
+            #sleep(3600)
         while True:
             interval_time = time()
             if gmtime().tm_wday in [5,6]:
