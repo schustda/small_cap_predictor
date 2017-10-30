@@ -92,7 +92,7 @@ class IhubData(GeneralFunctions):
             return self._clean_table(table,sort), error_list
 
         except Exception as e:
-            print ('{0} ERROR ON PAGE: {1}'.format(e, str(post_number)))
+            print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
             error_list.append(post_number)
             return pd.DataFrame(), error_list
 
