@@ -197,10 +197,11 @@ class IhubData(GeneralFunctions):
             final_error_list = []
             shallow_error_list = list(error_list)
             for page in shallow_error_list:
-                page_df, final_error_list = self._get_page(page,num_pinned=num_pinned,error_list = final_error_list)
+                page_df, final_error_list = self._get_page(ihub_url,post_number=page,
+                    num_pinned=num_pinned,error_list = final_error_list)
                 new_posts = pd.concat([new_posts,page_df])
             if final_error_list != []:
-                self._replace_bad_link(symbol,url)
+                self._replace_bad_link(symbol,ihub_url)
 
             new_posts.drop_duplicates(inplace = True)
             new_posts = self._add_deleted_posts(new_posts,start_number,num_posts)
