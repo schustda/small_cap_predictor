@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from sys import argv
+from getpass import getpass
 from time import time,sleep, gmtime
 from datetime import datetime as dt
 from email.mime.text import MIMEText
@@ -32,7 +33,7 @@ class DailyPrediction(TrainingData):
         log.to_csv('log/prediction_log.csv')
 
     def _update(self):
-        mbp = IhubData(verbose=1)
+        mbp = IhubData(verbose=1,email=self.email_address,password=self.password)
         mbp.pull_posts()
 
         sp = StockData()
@@ -102,7 +103,7 @@ class DailyPrediction(TrainingData):
                 self._update()
                 buy = self._make_predictions()
                 if len(buy) > 0:
-                    self._email_results(buy)
+                    self.send_email('prediction',buy)
                     self._update_log(buy)
 
                 rc = subprocess.call('scripts/git_add_data.sh',shell=True)
@@ -110,13 +111,19 @@ class DailyPrediction(TrainingData):
 
 if __name__ == '__main__':
 
-    username = input('Gmail Address: ')
-    password = input('Gmail Password: ')
-
+    username = input('Gmail Username: ')
+    password = getpass(prompt='Gmail Password: ')
+    if username.count('@') < 1:
+        username += '@gmail.com'
 
     num_days = 1200
     days_avg = 12
     threshold = 0.2
     p  = DailyPrediction(num_days = num_days,days_avg=days_avg,threshold=threshold,
     email_address = username, password = password)
-    p.update_and_predict()
+
+    try:
+        p.update_and_predict()
+    except Exception as e:
+        print (e)
+        error = e

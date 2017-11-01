@@ -7,7 +7,7 @@ from src.general_functions import GeneralFunctions
 
 class IhubData(GeneralFunctions):
 
-    def __init__(self, verbose=0, update_single=[]):
+    def __init__(self, verbose=0, update_single=[], email='', password=''):
         super().__init__()
         self.verbose = verbose
         self.update_single = update_single
@@ -18,6 +18,42 @@ class IhubData(GeneralFunctions):
         else:
             self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
                 index_col='key')
+        self.email_address = email
+        self.password = password
+
+    def _check_link_integrity(self,link):
+        URL = "https://investorshub.advfn.com/"+str(link)
+        content = requests.get(URL).content
+        soup = BeautifulSoup(content, "lxml")
+        tag = soup.find_all('a', id="ctl00_CP1_btop_hlBoard")[0]['href'][1:-1]
+        return tag
+
+    def _update_link(self,symbol,ihub_url,tag):
+
+        new_symbol = tag.split('-')[-2].lower()
+        self.send_email('update_symbol',[symbol,new_symbol])
+        # try:
+        #     self.send_email('update_symbol',[symbol,new_symbol])
+        # except:
+        #     print ('Fixed link for: ' + symbol)
+
+        # update ticker symbol database and save
+        idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index
+        self.ticker_symbols.loc[idx]['url'] = tag
+        self.ticker_symbols.loc[idx]['symbol'] = new_symbol
+        self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
+
+        # update message board data
+        idx = self.post_data[self.post_data.symbol == symbol].index
+        self.post_data.symbol.loc[idx] = new_symbol
+
+        # update stock price data
+        df = self.load_file('stock_prices')
+        idx = df[df.symbol == symbol].index
+        df.symbol.loc[idx] = new_symbol
+        self.save_file('stock_prices',df)
+
+        return new_symbol, tag
 
     def _total_and_num_pinned(self,url):
         '''
@@ -65,7 +101,8 @@ class IhubData(GeneralFunctions):
         return df
 
     def _get_page(self, url, num_pinned = 0, post_number = 1,
-            most_recent = False, sort = True, error_list = []):
+            most_recent = False, sort = True, error_list = [],
+            table = ''):
         '''
         Parameters
         ----------
@@ -95,39 +132,6 @@ class IhubData(GeneralFunctions):
             print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
             error_list.append(post_number)
             return pd.DataFrame(), error_list
-
-    def _replace_bad_link(self, symbol, url):
-        _,error_list = self._get_page(url,most_recent=True)
-        idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index[0]
-
-        if len(error_list) != 0:
-            url_lst = url.split('-')
-            symbol_idx = url_lst.index(symbol.upper())
-            url_lst[symbol_idx] += 'D'
-            url_new = "-".join(url_lst)
-            _,error_list = self._get_page(url_new,most_recent=True)
-
-            if len(error_list) != 0:
-                url_lst[symbol_idx] = url_lst[symbol_idx][:-2]
-                url_new = "-".join(url_lst)
-                _,error_list = self._get_page(url_new,most_recent=True)
-
-                if len(error_list) != 0:
-                    print ('LINK BROKEN')
-
-                else:
-                    # stock no longer has a D at the end
-                    self.ticker_symbols.loc[idx].symbol = symbol[:-1]
-                    self.ticker_symbols.loc[idx].url = url_new
-                    self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
-            else:
-                # stock has a split and not needs a D at the end
-                self.ticker_symbols.loc[idx].symbol = symbol + 'd'
-                self.ticker_symbols.loc[idx].url = url_new
-                self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
-        else:
-            print ('LINK WORKING')
-            #revise stock list
 
     def _add_deleted_posts(self, df, start, end):
         '''
@@ -166,6 +170,9 @@ class IhubData(GeneralFunctions):
         for _, stock in self.ticker_symbols.iterrows():
             self.interval_time, self.original_time = time(), time()
             symbol, ihub_url = stock['symbol'],stock['url']
+            tag = self._check_link_integrity(ihub_url)
+            if tag != ihub_url:
+                symbol, ihub_url = self._update_link(symbol,ihub_url,tag)
             num_pinned, num_posts = self._total_and_num_pinned(ihub_url)
             df = self.post_data[self.post_data.symbol == symbol]
             if len(df) == 0:
@@ -200,8 +207,6 @@ class IhubData(GeneralFunctions):
                 page_df, final_error_list = self._get_page(ihub_url,post_number=page,
                     num_pinned=num_pinned,error_list = final_error_list)
                 new_posts = pd.concat([new_posts,page_df])
-            if final_error_list != []:
-                self._replace_bad_link(symbol,ihub_url)
 
             new_posts.drop_duplicates(inplace = True)
             new_posts = self._add_deleted_posts(new_posts,start_number,num_posts)
