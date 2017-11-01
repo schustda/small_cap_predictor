@@ -71,29 +71,11 @@ class DailyPrediction(TrainingData):
 
         return buy
 
-    def _email_results(self,stock_lst):
-        fromaddr = self.email_address
-        toaddr = self.email_address
-        msg = MIMEMultipart()
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
-        msg['Subject'] = "BUY SIGNAL ALERT"
-
-        body = "Stocks indicating buy signal: {0}".format(", ".join(stock_lst).upper())
-        msg.attach(MIMEText(body, 'plain'))
-
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(fromaddr, self.password)
-        text = msg.as_string()
-        server.sendmail(fromaddr, toaddr, text)
-        server.quit()
-
     def update_and_predict(self):
         # can start program at any time, but will only run between 12-1am
-        #while gmtime().tm_hour != 6:
+        while gmtime().tm_hour != 6:
             # print (gmtime().tm_hour)
-            #sleep(3600)
+            sleep(3600)
         while True:
             interval_time = time()
             if gmtime().tm_wday in [5,6]:
