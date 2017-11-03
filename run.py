@@ -74,21 +74,22 @@ class DailyPrediction(TrainingData):
     def update_and_predict(self):
         # can start program at any time, but will only run between 12-1am
         while gmtime().tm_hour != 6:
-            # print (gmtime().tm_hour)
             sleep(3600)
         while True:
-            interval_time = time()
-            if gmtime().tm_wday in [5,6]:
-                pass
-            else:
-                rc = subprocess.call('scripts/git_pull.sh',shell=True)
-                self._update()
-                buy = self._make_predictions()
-                if len(buy) > 0:
-                    self.send_email('prediction',buy)
-                    self._update_log(buy)
-
-                rc = subprocess.call('scripts/git_add_data.sh',shell=True)
+            try:
+                interval_time = time()
+                if gmtime().tm_wday in [5,6]:
+                    pass
+                else:
+                    rc = subprocess.call('scripts/git_pull.sh',shell=True)
+                    self._update()
+                    buy = self._make_predictions()
+                    if len(buy) > 0:
+                        self.send_email('prediction',buy)
+                        self._update_log(buy)
+                    rc = subprocess.call('scripts/git_add_data.sh',shell=True)
+            except Exception as e:
+                self.send_email('error',e)
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':
@@ -101,11 +102,6 @@ if __name__ == '__main__':
     num_days = 1200
     days_avg = 12
     threshold = 0.2
-    p  = DailyPrediction(num_days = num_days,days_avg=days_avg,threshold=threshold,
+    p = DailyPrediction(num_days = num_days,days_avg=days_avg,threshold=threshold,
     email_address = username, password = password)
-
-    try:
-        p.update_and_predict()
-    except Exception as e:
-        print (e)
-        error = e
+    p.update_and_predict()

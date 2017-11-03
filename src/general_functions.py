@@ -54,6 +54,8 @@ class GeneralFunctions(object):
         elif topic == 'prediction':
             msg['Subject'] = "BUY SIGNAL ALERT"
             body = "Stocks indicating buy signal: {0}".format(", ".join(content).upper())
+        elif topic == 'error':
+            body = content
 
         fromaddr = self.email_address
         toaddr = self.email_address
