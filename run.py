@@ -1,19 +1,19 @@
-import smtplib
-import subprocess
+from datetime import datetime as dt
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from getpass import getpass
 import numpy as np
 import pandas as pd
-import xgboost as xgb
-from sys import argv
-from getpass import getpass
-from time import time,sleep, gmtime
-from datetime import datetime as dt
-from email.mime.text import MIMEText
 from sklearn.externals import joblib
 from src.data.ihub_data import IhubData
 from src.data.stock_data import StockData
 from src.data.combine_data import CombineData
-from email.mime.multipart import MIMEMultipart
 from src.data.training_data import TrainingData
+import smtplib
+import subprocess
+from sys import argv
+from time import time,sleep, gmtime
+import xgboost as xgb
 
 class DailyPrediction(TrainingData):
 
@@ -27,13 +27,18 @@ class DailyPrediction(TrainingData):
         self.password = password
 
     def _update_log(self, buy):
+        '''
+
+        '''
         log = pd.read_csv('log/prediction_log.csv',index_col='prediction')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
         log.to_csv('log/prediction_log.csv')
 
     def _update(self):
-        mbp = IhubData(verbose=1,email=self.email_address,password=self.password)
+        mbp = IhubData(verbose=1,email=self.email_address,password=self.password,
+            # delay=True
+            )
         mbp.pull_posts()
 
         sp = StockData()
@@ -89,7 +94,7 @@ class DailyPrediction(TrainingData):
                         self._update_log(buy)
                     rc = subprocess.call('scripts/git_add_data.sh',shell=True)
             except Exception as e:
-                self.send_email('error',e)
+                self.send_email('error',str(e))
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':

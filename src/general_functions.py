@@ -74,5 +74,4 @@ class GeneralFunctions(object):
 
 if __name__ == '__main__':
     sf = GeneralFunctions()
-    mbp = sf.load_file('message_board_posts')
-    # sf.save_file('message_board_posts',mbp)
+    df = sf.load_file('message_board_posts')

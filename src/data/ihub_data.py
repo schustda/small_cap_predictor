@@ -2,12 +2,13 @@ import requests
 import numpy as np
 import pandas as pd
 from time import time
+from time import sleep
 from bs4 import BeautifulSoup
 from src.general_functions import GeneralFunctions
 
 class IhubData(GeneralFunctions):
 
-    def __init__(self, verbose=0, update_single=[], email='', password=''):
+    def __init__(self, verbose=0, update_single=[], email='', password='',delay=False):
         super().__init__()
         self.verbose = verbose
         self.update_single = update_single
@@ -20,6 +21,7 @@ class IhubData(GeneralFunctions):
                 index_col='key')
         self.email_address = email
         self.password = password
+        self.delay = delay
 
     def _check_link_integrity(self,link):
         URL = "https://investorshub.advfn.com/"+str(link)
@@ -32,13 +34,9 @@ class IhubData(GeneralFunctions):
 
         new_symbol = tag.split('-')[-2].lower()
         self.send_email('update_symbol',[symbol,new_symbol])
-        # try:
-        #     self.send_email('update_symbol',[symbol,new_symbol])
-        # except:
-        #     print ('Fixed link for: ' + symbol)
 
         # update ticker symbol database and save
-        idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index
+        idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index[0]
         self.ticker_symbols.loc[idx]['url'] = tag
         self.ticker_symbols.loc[idx]['symbol'] = new_symbol
         self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
@@ -101,8 +99,7 @@ class IhubData(GeneralFunctions):
         return df
 
     def _get_page(self, url, num_pinned = 0, post_number = 1,
-            most_recent = False, sort = True, error_list = [],
-            table = ''):
+            most_recent = False, sort = True, error_list = []):
         '''
         Parameters
         ----------
@@ -118,20 +115,26 @@ class IhubData(GeneralFunctions):
         URL = "https://investorshub.advfn.com/"+str(url)
         if not most_recent:
             URL += "/?NextStart="+str(post_number)
-        content = requests.get(URL).content
-        soup = BeautifulSoup(content, "lxml")
         try:
-            rows = list(soup.find('table', id="ctl00_CP1_gv"))
-            table = []
-            for row in rows[(2+num_pinned):-2]:
-                cell_lst = [cell for cell in list(row)[1:5]]
-                table.append(cell_lst)
-            return self._clean_table(table,sort), error_list
-
+            content = requests.get(URL).content
         except Exception as e:
             print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
             error_list.append(post_number)
             return pd.DataFrame(), error_list
+
+        soup = BeautifulSoup(content, "lxml")
+        rows = list(soup.find('table', id="ctl00_CP1_gv"))
+        table = []
+        try:
+            for row in rows[(2+num_pinned):-2]:
+                cell_lst = [cell for cell in list(row)[1:5]]
+                table.append(cell_lst)
+            return self._clean_table(table,sort), error_list
+        except Exception as e:
+            print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
+            error_list.append(post_number)
+            return pd.DataFrame(), error_list
+
 
     def _add_deleted_posts(self, df, start, end):
         '''
@@ -172,6 +175,7 @@ class IhubData(GeneralFunctions):
             symbol, ihub_url = stock['symbol'],stock['url']
             tag = self._check_link_integrity(ihub_url)
             if tag != ihub_url:
+                print ('{0} changing to {1}'.format(ihub_url,tag))
                 symbol, ihub_url = self._update_link(symbol,ihub_url,tag)
             num_pinned, num_posts = self._total_and_num_pinned(ihub_url)
             df = self.post_data[self.post_data.symbol == symbol]
@@ -200,6 +204,8 @@ class IhubData(GeneralFunctions):
                 if self.verbose:
                     percent = int(num/number_of_pages*100)
                     self.status_update(percent)
+                if self.delay:
+                    sleep(10)
 
             final_error_list = []
             shallow_error_list = list(error_list)

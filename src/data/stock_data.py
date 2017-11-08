@@ -81,7 +81,7 @@ class StockData(GeneralFunctions):
     def update_stock_data(self):
 
         first = True
-        print ('Getting stock price history for:')
+        print ('\n','Getting stock price history for:')
         if self.update_single != []:
             # self.stock_data = pd.read_csv('data/tables/stock_prices.csv',index_col='Date')
             self.stock_data = self.load_file('stock_prices')
