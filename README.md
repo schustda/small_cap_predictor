@@ -14,15 +14,21 @@ On your Gmail account, ensure that 'Allow less secure apps is set to: ON'. Doing
 
 ### Instructions for use:
 
-Open a terminal instance and navigate to the directory where the repository is saved then type:
+Install dependencies with:
+
+`pip install -r requirements.txt`
+
+Begin running the application with:
 
 `python run.py`
 
-Then enter your email address and password when prompted.
+Enter your email address and password when prompted.
 
 ### Authors
 
-* **Douglas Schuster** - [schustda](https://github.com/schustda)
+* **Douglas Schuster**
+    * github -- [schustda](https://github.com/schustda)
+    * email -- [douglas.schuster303@gmail.com](douglas.schuster303@gmail.com)
 
 ### Data Sources
 * [Fidelity](https://www.fidelity.com/)
@@ -32,7 +38,7 @@ Then enter your email address and password when prompted.
 
 Version 1 created 09/27/2017 (XGboost)
 
-### Model Performance
+### Model Performance on unseen test set:
 
 ```
 AUC Score: 0.89
