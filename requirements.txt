@@ -1,5 +1,4 @@
 beautifulsoup4==4.6.0
-joblib==0.112
 numpy==1.12.1
 pandas==0.21.0
 pathlib==1.0.1
