@@ -27,42 +27,27 @@ class DailyPrediction(TrainingData):
         self.password = password
 
     def _update_log(self, buy):
-        '''
-
-        '''
         log = pd.read_csv('log/prediction_log.csv',index_col='prediction')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
         log.to_csv('log/prediction_log.csv')
 
-    def _update(self):
-        mbp = IhubData(verbose=1,email=self.email_address,password=self.password,
-            # delay=True
-            )
-        mbp.pull_posts()
-
-        sp = StockData()
-        sp.update_stock_data()
-
-        cd = CombineData()
-        cd.compile_data()
-
     def _make_predictions(self):
+        # Load current model, symbols, and most recent dataset
         model = joblib.load('data/model/model.pkl')
-
         ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
             index_col='key')
-
         combined_data = pd.read_csv('data/tables/combined_data.csv')
 
         buy = []
-        for _, stock in ticker_symbols.iterrows():
+        for _,stock in ticker_symbols.iterrows():
             symbol = stock['symbol']
             data = combined_data[combined_data.symbol == symbol]
 
+            # some of the symbols do not qualify as they do not have enough
+            # price history required to make a prediction
             if data.shape[0] <= self.num_days:
                 continue
-
             else:
                 x_pred = self._get_data_point(data.shape[0],data).reshape(1,-1)
                 train_pred_proba = model.predict(xgb.DMatrix(x_pred))
@@ -73,12 +58,11 @@ class DailyPrediction(TrainingData):
                 if train_pred == 1:
                     buy.append(symbol)
                 print(symbol, bool(train_pred))
-
         return buy
 
     def update_and_predict(self):
-        # can start program at any time, but will only run between 12-1am
-        while gmtime().tm_hour != 6:
+        # can start program at any time, but will only run between 1-2am MST
+        while gmtime().tm_hour != 7:
             sleep(3600)
         while True:
             try:
@@ -87,7 +71,6 @@ class DailyPrediction(TrainingData):
                     pass
                 else:
                     rc = subprocess.call('scripts/git_pull.sh',shell=True)
-                    self._update()
                     buy = self._make_predictions()
                     if len(buy) > 0:
                         self.send_email('prediction',buy)
