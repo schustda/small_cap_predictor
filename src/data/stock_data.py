@@ -52,32 +52,6 @@ class StockData(GeneralFunctions):
         df.fillna({'Volume': 0},inplace=True)
         return df.fillna(method = 'ffill')
 
-    def _replace_bad_link(self, symbol):
-        idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index[0]
-        df = pd.DataFrame(columns=['Open','High','Low','Close','Volume','symbol'])
-        try:
-            url = self.fid_url + symbol.upper() + 'D'
-            df = pd.read_csv(url,index_col = 'Date').iloc[:-18]
-            df = self._add_zero_days(df)
-            df['symbol'] = symbol+'d'
-            self.ticker_symbols.loc[idx].symbol = symbol + 'd'
-            self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
-            print ('Added "D" to symbol')
-        except:
-            print ('Split (D) not working')
-
-            try:
-                url = self.fid_url + symbol.upper()[:-1]
-                df = pd.read_csv(url,index_col = 'Date').iloc[:-18]
-                df = self._add_zero_days(df)
-                df['symbol'] = symbol[:-1]
-                self.ticker_symbols.loc[idx].symbol = symbol[:-1]
-                self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
-
-            except:
-                print ('Link broken for {0}'.format(symbol))
-        return df
-
     def update_stock_data(self):
 
         first = True
@@ -95,9 +69,9 @@ class StockData(GeneralFunctions):
                 df = pd.read_csv(url,index_col = 'Date').iloc[:-18]
                 df = self._add_zero_days(df)
                 df['symbol'] = symbol
-            except:
+            except Exception as e:
+                self.send_email('error',e)
                 print ('Error for {0}'.format(symbol))
-                df = self._replace_bad_link(symbol)
 
             if first:
                 self.stock_data = df

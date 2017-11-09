@@ -43,12 +43,12 @@ class IhubData(GeneralFunctions):
 
         # update message board data
         idx = self.post_data[self.post_data.symbol == symbol].index
-        self.post_data.symbol.loc[idx] = new_symbol
+        self.post_data.loc[idx,'symbol'] = new_symbol
 
         # update stock price data
         df = self.load_file('stock_prices')
         idx = df[df.symbol == symbol].index
-        df.symbol.loc[idx] = new_symbol
+        df.loc[idx,'symbol'] = new_symbol
         self.save_file('stock_prices',df)
 
         return new_symbol, tag

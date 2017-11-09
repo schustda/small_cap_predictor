@@ -75,3 +75,4 @@ class GeneralFunctions(object):
 if __name__ == '__main__':
     sf = GeneralFunctions()
     df = sf.load_file('message_board_posts')
+    sp = sf.load_file('stock_prices')
