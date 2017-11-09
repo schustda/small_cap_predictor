@@ -30,7 +30,7 @@ class Update(GeneralFunctions):
                 rc = subprocess.call('scripts/git_add_data.sh',shell=True)
             except Exception as e:
                 self.send_email('error',str(e))
-            sleep(60*60-(time()-interval_time))
+            sleep(60*60*24-(time()-interval_time))
 
 
 if __name__ == '__main__':
