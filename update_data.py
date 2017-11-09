@@ -19,6 +19,9 @@ class Update(GeneralFunctions):
         CombineData().compile_data()
 
     def daily_update(self):
+        # can start program at any time, but will only run between 1-2am MST
+        while gmtime().tm_hour != 6:
+            sleep(3600)
         while True:
             try:
                 interval_time = time()
