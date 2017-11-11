@@ -6,17 +6,18 @@ import subprocess
 from getpass import getpass
 from time import gmtime,sleep,time
 
-class Update(GeneralFunctions):
+class Update(IhubData,StockData,CombineData):
 
     def __init__(self,email_address,password):
+        super().__init__()
         self.email_address = email_address
         self.password = password
 
     def _update(self):
-        IhubData(verbose=1,email=self.email_address,
-        password=self.password,delay=True).pull_posts()
-        StockData().update_stock_data()
-        CombineData().compile_data()
+        self.delay,self.verbose = True, 1
+        self.pull_posts()
+        self.update_stock_data()
+        self.compile_data()
 
     def daily_update(self):
         # can start program at any time, but will only run between 1-2am MST
