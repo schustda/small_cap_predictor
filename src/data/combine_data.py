@@ -38,11 +38,11 @@ class CombineData(GeneralFunctions):
         df.fillna(0.00,inplace = True)
 
         #create ohlc column
-        df['ohlc'] = (df['Open']+df['High']+df['Low']+df['Close'])/4
+        df.loc[:,'ohlc'] = df.loc[:,['Open','High','Low','Close']].mean(axis=1)
 
         #create dollar volumne column
-        df['dollar_volume'] = df['ohlc'] * df['Volume']
-        df.drop(['Open','Close','High','Low','Date','Volume'],axis=1,inplace=True,errors='ignore')
+        df.loc[:,'dollar_volume'] = (df.ohlc * df.Volume)
+        df = df.drop(['Open','Close','High','Low','Volume'],axis=1)
         df.index = pd.to_datetime(df.index)
         return df
 
@@ -63,8 +63,8 @@ class CombineData(GeneralFunctions):
             print ('Compiling data for ' + symbol)
             mbp = self.message_board_posts[self.message_board_posts.symbol == symbol]
             sp = self.stock_prices[self.stock_prices.symbol == symbol]
-            mbp.drop('symbol',axis=1,inplace=True)
-            sp.drop('symbol',axis=1,inplace=True)
+            mbp = mbp.drop('symbol',axis=1)
+            sp = sp.drop('symbol',axis=1)
 
             sp = self._calculate_ohlc(sp)
             grouped_posts = mbp.groupby('date').count().post_number

@@ -70,6 +70,7 @@ class StockData(GeneralFunctions):
                 df = self._add_zero_days(df)
                 df['symbol'] = symbol
             except Exception as e:
+                df = df[df['symbol'] == symbol]
                 self.send_email('error',e)
                 print ('Error for {0}'.format(symbol))
 

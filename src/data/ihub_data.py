@@ -68,10 +68,13 @@ class IhubData(GeneralFunctions):
 
         # Number of pinned posts determined by the number of posts that are not
         # in 'numerical' order at the top of the page
-        post_list = df.post_number.tolist()
-        for i in range(len(post_list)):
-            if post_list[i] == post_list[i+1]+1:
-                return i, post_list[i]
+        try:
+            post_list = df.post_number.tolist()
+            for i in range(len(post_list)):
+                if post_list[i] == post_list[i+1]+1:
+                    return i, post_list[i]
+        except:
+            return 0,0
 
     def _clean_table(self, table, sort):
         '''
@@ -177,14 +180,15 @@ class IhubData(GeneralFunctions):
             if tag != ihub_url:
                 print ('{0} changing to {1}'.format(ihub_url,tag))
                 symbol, ihub_url = self._update_link(symbol,ihub_url,tag)
-            num_pinned, num_posts = self._total_and_num_pinned(ihub_url)
             df = self.post_data[self.post_data.symbol == symbol]
+            num_pinned, num_posts = self._total_and_num_pinned(ihub_url)
+
             if len(df) == 0:
                 start_number = 0
             else:
                 start_number = df.post_number.max()
 
-            if num_posts == df.post_number.max():
+            if (num_posts == df.post_number.max()) or (num_posts == 0):
                 print('No posts added for {0}'.format(symbol))
                 continue
 
