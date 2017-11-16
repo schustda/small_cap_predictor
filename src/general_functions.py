@@ -6,7 +6,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from os import environ
 import boto3
-from io import StringIO
+from io import StringIO, BytesIO
+from string import Template
+import codecs
+from PIL import Image
+from datetime import datetime
 
 class GeneralFunctions(object):
 
@@ -34,7 +38,6 @@ class GeneralFunctions(object):
         csv_buffer = StringIO()
         f.to_csv(csv_buffer)
         self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
-        # sf.s3_resource.Object('small-cap-predictor',df).put(Body=csv_buffer.getvalue())
 
     def load_file(self,f):
         for i in range(self.breaks):
@@ -67,35 +70,70 @@ class GeneralFunctions(object):
             print ('|{0}{1}| {2}% - {3} minute(s) remaining'.format(a*'=',b*'-',str(percent),str(min_rem)))
             self.interval_time = time()
 
+    def _get_html(self,stocks_to_buy):
+        f = codecs.open('scripts/daily_update.html','r')
+        html = f.read()
+        return Template(html).safe_substitute(predictions=stocks_to_buy)
+
+    def save_image_to_s3(self,filepath):
+        '''
+        filepath within the images folder
+        '''
+        filepath = 'images/'+filepath
+        out_img = BytesIO()
+        img = Image.open(filepath)
+        filepath = filepath.replace('.jpg','.png')
+        img.save(out_img,'PNG')
+        out_img.seek(0)
+        self.s3_resource.Bucket('small-cap-predictor').put_object(Key=filepath,Body=out_img,ACL='public-read')
+
+
     def send_email(self,topic,content):
         msg = MIMEMultipart()
+        distribution_list = self.import_from_s3('distribution_list',0)
+        distribution_list = distribution_list.email_address.tolist()
         if topic == 'update_symbol':
-            msg['Subject'] = "Symbol updated"
+            subject = "Symbol updated"
             body = 'Ticker symbol {0} changed to {1}'.format(content[0],content[1])
+            distribution_list = distribution_list[0]
         elif topic == 'prediction':
-            msg['Subject'] = "BUY SIGNAL ALERT"
-            body = "Stocks indicating buy signal: {0}".format(", ".join(content).upper())
+            subject = "Daily Small Cap Predictor Summary for "
+            body = self._get_html(", ".join(content).upper())
+            # body = "Stocks indicating buy signal: {0}".format(", ".join(content).upper())
         elif topic == 'error':
+            subject = 'ERROR ALERT'
             body = content
+            distribution_list = distribution_list[0]
 
-        fromaddr = self.email_address
-        toaddr = self.email_address
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
+        subject += str(datetime.today().date())
+        msg['Subject'] = subject
 
-        msg.attach(MIMEText(body, 'plain'))
+        for to_email in distribution_list:
+            fromaddr = self.email_address
+            toaddr = to_email
+            msg['From'] = fromaddr
+            msg['To'] = toaddr
 
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(fromaddr, self.password)
-        text = msg.as_string()
-        server.sendmail(fromaddr, toaddr, text)
-        server.quit()
+            if topic == 'prediction':
+                msg.attach(MIMEText(body, 'html'))
+            else:
+                msg.attach(MIMEText(body, 'plain'))
+
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(fromaddr, self.password)
+            text = msg.as_string()
+            server.sendmail(fromaddr, toaddr, text)
+            server.quit()
 
 
 if __name__ == '__main__':
-    sf = GeneralFunctions()
+    gf = GeneralFunctions()
+    gf.email_address = 'smallcappredictor@gmail.com'
+    gf.password = 'Iheartpython5'
+    # a = gf.import_from_s3('distribution_list',header=None)
+    gf.send_email('prediction',['asdf'])
     # df = sf.load_file('message_board_posts')
-    sp = sf.load_file('stock_prices')
+    # sp = sf.load_file('stock_prices')
     # sf.save_file('message_board_posts',df)
-    sf.save_file('stock_prices',sp)
+    # sf.save_file('stock_prices',sp)

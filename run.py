@@ -9,11 +9,14 @@ from src.data.ihub_data import IhubData
 from src.data.stock_data import StockData
 from src.data.combine_data import CombineData
 from src.data.training_data import TrainingData
+from src.general_functions import GeneralFunctions
 import smtplib
 import subprocess
 from sys import argv
 from time import time,sleep, gmtime
 import xgboost as xgb
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 class DailyPrediction(TrainingData):
 
@@ -27,23 +30,39 @@ class DailyPrediction(TrainingData):
         self.password = password
 
     def _update_log(self, buy):
-        self.import_from_s3('prediction_log','prediction')
-        # log = pd.read_csv('log/prediction_log.csv',index_col='prediction')
+        log = self.import_from_s3('prediction_log','prediction')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
         self.save_to_s3(log,'prediction_log')
-        # log.to_csv('log/prediction_log.csv')
+
+    def plot_pred_percentage(self,predictions):
+        symbols, percent = zip(*predictions)
+
+        plt.close('all')
+        fig, ax = plt.subplots()
+        edgecolor = ['black']*len(symbols)
+        sns.set_color_codes("pastel")
+        sns.barplot(x=list(range(len(symbols))), y=[1]*len(symbols),
+                    color='r',
+                   edgecolor=edgecolor)
+
+        sns.set_color_codes("muted")
+        sns.barplot(x=list(range(len(symbols))), y=percent,
+        color='r',
+        edgecolor=edgecolor)
+
+        fig.suptitle('Top 5 Highest Percentage')
+        ax.set_xticklabels(symbols)
+        plt.savefig('images/daily_update.png')
 
     def _make_predictions(self):
         # Load current model, symbols, and most recent dataset
         model = joblib.load('data/model/model.pkl')
         ticker_symbols = self.import_from_s3('ticker_symbols','key')
-        # ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-        #     index_col='key')
         combined_data = self.import_from_s3('combined_data')
-        # combined_data = pd.read_csv('data/tables/combined_data.csv')
 
         buy = []
+        chance = []
         for _,stock in ticker_symbols.iterrows():
             symbol = stock['symbol']
             data = combined_data[combined_data.symbol == symbol]
@@ -61,8 +80,10 @@ class DailyPrediction(TrainingData):
                 train_pred[np.invert(train_mask)] = 0
                 if train_pred == 1:
                     buy.append(symbol)
+                chance.append((symbol,float(train_pred_proba)))
                 print(symbol, bool(train_pred))
-        return buy
+        chance = sorted(chance,key = lambda x: x[1],reverse=True)
+        return buy, chance
 
     def update_and_predict(self):
         # can start program at any time, but will only run between 1-2am MST
@@ -74,12 +95,13 @@ class DailyPrediction(TrainingData):
                 if gmtime().tm_wday in [5,6]:
                     pass
                 else:
-                    buy = self._make_predictions()
-                    if len(buy) > 0:
-                        self.send_email('prediction',buy)
-                        self._update_log(buy)
-            except Exception as e:
-                self.send_email('error',str(e))
+                    buy,chances = self._make_predictions()
+                    top5 = chances[0:5]
+                    self.plot_pred_percentage(top5)
+                    self.save_image_to_s3('daily_update.png')
+                    self.send_email('prediction',buy)
+                    self._update_log(buy)
+            exceptlf.send_email('error',str(e))
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':

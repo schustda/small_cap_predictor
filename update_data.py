@@ -14,10 +14,21 @@ class Update(IhubData,StockData,CombineData):
         self.password = password
 
     def _update(self):
-        self.delay,self.verbose = True, 1
-        self.pull_posts()
-        self.update_stock_data()
-        self.compile_data()
+
+        ihub = IhubData(
+            # delay=True,
+            # verbose=1
+            )
+        ihub.pull_posts()
+        del ihub
+
+        sd = StockData()
+        sd.update_stock_data()
+        del sd
+
+        cd = CombineData()
+        cd.compile_data()
+        del cd
 
     def daily_update(self):
         # can start program at any time, but will only run between 1-2am MST
