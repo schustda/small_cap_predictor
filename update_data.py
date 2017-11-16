@@ -26,9 +26,7 @@ class Update(IhubData,StockData,CombineData):
         while True:
             try:
                 interval_time = time()
-                rc = subprocess.call('scripts/git_pull.sh',shell=True)
                 self._update()
-                rc = subprocess.call('scripts/git_add_data.sh',shell=True)
             except Exception as e:
                 self.send_email('error',str(e))
             sleep(60*60*24-(time()-interval_time))
