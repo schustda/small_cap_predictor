@@ -27,17 +27,21 @@ class DailyPrediction(TrainingData):
         self.password = password
 
     def _update_log(self, buy):
-        log = pd.read_csv('log/prediction_log.csv',index_col='prediction')
+        self.import_from_s3('prediction_log','prediction')
+        # log = pd.read_csv('log/prediction_log.csv',index_col='prediction')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
-        log.to_csv('log/prediction_log.csv')
+        self.save_to_s3(log,'prediction_log')
+        # log.to_csv('log/prediction_log.csv')
 
     def _make_predictions(self):
         # Load current model, symbols, and most recent dataset
         model = joblib.load('data/model/model.pkl')
-        ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-            index_col='key')
-        combined_data = pd.read_csv('data/tables/combined_data.csv')
+        ticker_symbols = self.import_from_s3('ticker_symbols','key')
+        # ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
+        #     index_col='key')
+        combined_data = self.import_from_s3('combined_data')
+        # combined_data = pd.read_csv('data/tables/combined_data.csv')
 
         buy = []
         for _,stock in ticker_symbols.iterrows():
@@ -70,12 +74,10 @@ class DailyPrediction(TrainingData):
                 if gmtime().tm_wday in [5,6]:
                     pass
                 else:
-                    rc = subprocess.call('scripts/git_pull.sh',shell=True)
                     buy = self._make_predictions()
                     if len(buy) > 0:
                         self.send_email('prediction',buy)
                         self._update_log(buy)
-                    rc = subprocess.call('scripts/git_add_data.sh',shell=True)
             except Exception as e:
                 self.send_email('error',str(e))
             sleep(60*60*24-(time()-interval_time))

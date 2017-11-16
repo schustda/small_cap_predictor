@@ -12,6 +12,7 @@ class TrainingData(GeneralFunctions):
     def __init__(self, num_days = 50, num_points = 1000, days_avg = 1,
                     errors = 'ignore', method='all', percentage=1,
                     times_to_resample=1, predict=False,verbose=1):
+        super().__init__()            
         self.num_days = num_days
         self.num_points = num_points
         self.days_avg = days_avg

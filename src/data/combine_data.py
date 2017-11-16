@@ -92,7 +92,8 @@ class CombineData(GeneralFunctions):
             else:
                 final = pd.concat([final,combined_data])
 
-        final.to_csv('data/tables/combined_data.csv')
+        self.save_to_s3(final,'combined_data')
+        # final.to_csv('data/tables/combined_data.csv')
 
 if __name__ == '__main__':
 
