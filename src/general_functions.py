@@ -4,20 +4,41 @@ from math import ceil
 from time import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
-
+from os import environ
+import boto3
+from io import StringIO
 
 class GeneralFunctions(object):
 
     def __init__(self, breaks=10):
         self.breaks = breaks
+        self.s3_url = 'https://s3.amazonaws.com/small-cap-predictor/'
+        self.bucket = 'small-cap-predictor'
+        self.s3_resource = boto3.resource('s3',
+                aws_access_key_id=environ['AWS_ACCESS_KEY'],
+                aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+        self.s3_client = boto3.client('s3',
+                aws_access_key_id=environ['AWS_ACCESS_KEY'],
+                aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
         self.index_col = {'message_board_posts': 0,
-                            'stock_prices': 'Date'}
+                            'stock_prices': 'Date',
+                            'ticker_symbols': 'key'}
+
+    def import_from_s3(self,filename,index_col=None):
+        obj = self.s3_client.get_object(Bucket=self.bucket,Key=filename+'.csv')
+        body = obj['Body']
+        csv_string = body.read().decode('utf-8')
+        return pd.read_csv(StringIO(csv_string),index_col=index_col)
+
+    def save_to_s3(self,f,filename):
+        csv_buffer = StringIO()
+        f.to_csv(csv_buffer)
+        self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
+        # sf.s3_resource.Object('small-cap-predictor',df).put(Body=csv_buffer.getvalue())
 
     def load_file(self,f):
         for i in range(self.breaks):
-            df_load = pd.read_csv('data/tables/{0}/{0}{1}.csv'.format(f,i),
-                index_col=self.index_col[f])
+            df_load = self.import_from_s3('{0}/{0}{1}'.format(f,i),self.index_col[f])
             if i == 0:
                 df = df_load
             else:
@@ -29,7 +50,7 @@ class GeneralFunctions(object):
         break_lst = list(range(0,df.shape[0],ceil(df.shape[0]/self.breaks)))
         break_lst.append(df.shape[0])
         for i in range(len(break_lst)-1):
-            df[break_lst[i]:break_lst[i+1]].to_csv('data/tables/{0}/{0}{1}.csv'.format(f,i))
+            self.save_to_s3(df[break_lst[i]:break_lst[i+1]],'{0}/{0}{1}'.format(f,i))
 
     def status_update(self,percent):
         '''
@@ -74,5 +95,7 @@ class GeneralFunctions(object):
 
 if __name__ == '__main__':
     sf = GeneralFunctions()
-    df = sf.load_file('message_board_posts')
+    # df = sf.load_file('message_board_posts')
     sp = sf.load_file('stock_prices')
+    # sf.save_file('message_board_posts',df)
+    sf.save_file('stock_prices',sp)

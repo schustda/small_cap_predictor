@@ -17,8 +17,9 @@ class IhubData(GeneralFunctions):
             self.ticker_symbols = pd.DataFrame(update_single).T
             self.ticker_symbols.columns = ['symbol','url']
         else:
-            self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-                index_col='key')
+            self.ticker_symbols = self.import_from_s3('ticker_symbols','key')
+            # self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
+            #     index_col='key')
         self.email_address = email
         self.password = password
         self.delay = delay

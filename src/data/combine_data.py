@@ -14,8 +14,9 @@ class CombineData(GeneralFunctions):
         super().__init__()
         self.message_board_posts = self.load_file('message_board_posts')
         self.stock_prices = self.load_file('stock_prices')
-        self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-            index_col='key')
+        self.ticker_symbols = self.import_from_s3('ticker_symbols','key')
+        # self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
+        #     index_col='key')
 
     def _calculate_ohlc(self,df):
         '''
@@ -52,7 +53,8 @@ class CombineData(GeneralFunctions):
             days will not be included
         '''
         weekend_dates = set(df[df.weekday > 4].index)
-        holiday_dates = set(pd.to_datetime(pd.read_csv('data/tables/stock_market_holidays.csv').date))
+        holiday_dates = set(pd.to_datetime(self.import_from_s3('stock_market_holidays').date))
+        # holiday_dates = set(pd.to_datetime(pd.read_csv('data/tables/stock_market_holidays.csv').date))
         return df.drop(holiday_dates.union(weekend_dates),errors='ignore')
 
     def compile_data(self):
