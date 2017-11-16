@@ -129,11 +129,4 @@ class GeneralFunctions(object):
 
 if __name__ == '__main__':
     gf = GeneralFunctions()
-    gf.email_address = 'smallcappredictor@gmail.com'
-    gf.password = 'Iheartpython5'
-    # a = gf.import_from_s3('distribution_list',header=None)
     gf.send_email('prediction',['asdf'])
-    # df = sf.load_file('message_board_posts')
-    # sp = sf.load_file('stock_prices')
-    # sf.save_file('message_board_posts',df)
-    # sf.save_file('stock_prices',sp)
