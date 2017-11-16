@@ -6,13 +6,11 @@ This repository contains an algorithm to predict a 'buy' signal for an assortmen
 
 ### Getting Started
 
-All you need is an active Gmail account and installation of python 3. The application will need to be continuously running so utilizing an instance on the cloud will aid.
-
-### Prerequisites
-
-On your Gmail account, ensure that 'Allow less secure apps is set to: ON'. Doing so can be done here: https://myaccount.google.com/lesssecureapps?pli=1
+Please email douglas.schuster303@gmail.com to request to be put on the daily prediction email list.
 
 ### Instructions for use:
+
+** There is no need to be running this unless you want to test yourself**
 
 Install dependencies with:
 
