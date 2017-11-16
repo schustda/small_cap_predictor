@@ -101,7 +101,7 @@ class DailyPrediction(TrainingData):
                     self.save_image_to_s3('daily_update.png')
                     self.send_email('prediction',buy)
                     self._update_log(buy)
-            exceptlf.send_email('error',str(e))
+            except.send_email('error',str(e))
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':
