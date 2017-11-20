@@ -1,24 +1,19 @@
-from src.data.ihub_data import IhubData
-from src.data.stock_data import StockData
-from src.data.combine_data import CombineData
-from src.general_functions import GeneralFunctions
-import subprocess
-from getpass import getpass
+from src.ihub_data import IhubData
+from src.stock_data import StockData
+from src.combine_data import CombineData
+from emails.send_emails import Email
 from time import gmtime,sleep,time
 
-class Update(IhubData,StockData,CombineData):
+class Update(Email):
 
-    def __init__(self,email_address,password):
+    def __init__(self,now=False,delay=True):
         super().__init__()
-        self.email_address = email_address
-        self.password = password
+        self.now = now
+        self.delay = delay
 
     def _update(self):
 
-        ihub = IhubData(
-            # delay=True,
-            # verbose=1
-            )
+        ihub = IhubData(delay=self.delay,verbose=1)
         ihub.pull_posts()
         del ihub
 
@@ -32,8 +27,9 @@ class Update(IhubData,StockData,CombineData):
 
     def daily_update(self):
         # can start program at any time, but will only run between 1-2am MST
-        while gmtime().tm_hour != 6:
-            sleep(3600)
+        if not self.now:
+            while gmtime().tm_hour != 6:
+                sleep(3600)
         while True:
             try:
                 interval_time = time()
@@ -45,9 +41,4 @@ class Update(IhubData,StockData,CombineData):
 
 if __name__ == '__main__':
 
-    username = input('Gmail Username: ')
-    password = getpass(prompt='Gmail Password: ')
-    if username.count('@') < 1:
-        username += '@gmail.com'
-
-    Update(username,password).daily_update()
+    UpdateData().daily_update()

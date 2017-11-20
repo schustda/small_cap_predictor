@@ -3,10 +3,8 @@ import numpy as np
 import datetime
 from math import isnan
 import pathlib
-from src.data.define_target import DefineTarget
+from src.define_target import DefineTarget
 from src.general_functions import GeneralFunctions
-
-
 
 class CombineData(GeneralFunctions):
 
@@ -14,9 +12,7 @@ class CombineData(GeneralFunctions):
         super().__init__()
         self.message_board_posts = self.load_file('message_board_posts')
         self.stock_prices = self.load_file('stock_prices')
-        self.ticker_symbols = self.import_from_s3('ticker_symbols','key')
-        # self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-        #     index_col='key')
+        self.ticker_symbols = self.import_from_s3('ticker_symbols')
 
     def _calculate_ohlc(self,df):
         '''
@@ -93,9 +89,7 @@ class CombineData(GeneralFunctions):
                 final = pd.concat([final,combined_data])
 
         self.save_to_s3(final,'combined_data')
-        # final.to_csv('data/tables/combined_data.csv')
 
 if __name__ == '__main__':
 
-    cd = CombineData()
-    avxl = cd.compile_data()
+    CombineData().compile_data()

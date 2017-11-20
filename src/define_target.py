@@ -5,8 +5,6 @@ class DefineTarget(object):
 
     def __init__(self,data):
         self.data = data
-        # self.ticker_symbol = ticker_symbol
-        # self.data = self._import_data()
         self.stock_size = self._big_or_small()
         self.target = self.add_target()
 

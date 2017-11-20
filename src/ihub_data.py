@@ -5,10 +5,11 @@ from time import time
 from time import sleep
 from bs4 import BeautifulSoup
 from src.general_functions import GeneralFunctions
+from emails.send_emails import Email
 
-class IhubData(GeneralFunctions):
+class IhubData(Email,GeneralFunctions):
 
-    def __init__(self, verbose=0, update_single=[], email='', password='',delay=False):
+    def __init__(self, verbose=0, update_single=[],delay=False):
         super().__init__()
         self.verbose = verbose
         self.update_single = update_single
@@ -17,11 +18,7 @@ class IhubData(GeneralFunctions):
             self.ticker_symbols = pd.DataFrame(update_single).T
             self.ticker_symbols.columns = ['symbol','url']
         else:
-            self.ticker_symbols = self.import_from_s3('ticker_symbols','key')
-            # self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-            #     index_col='key')
-        self.email_address = email
-        self.password = password
+            self.ticker_symbols = self.import_from_s3('ticker_symbols')
         self.delay = delay
 
     def _check_link_integrity(self,link):
@@ -64,17 +61,19 @@ class IhubData(GeneralFunctions):
             the specific board
         '''
 
-        # Retrieve the first page on the board
-        df, _ = self._get_page(url,most_recent=True,sort = False)
-
-        # Number of pinned posts determined by the number of posts that are not
-        # in 'numerical' order at the top of the page
         try:
+
+            # Retrieve the first page on the board
+            df, _ = self._get_page(url,most_recent=True,sort = False)
+
+            # Number of pinned posts determined by the number of posts that are not
+            # in 'numerical' order at the top of the page
             post_list = df.post_number.tolist()
             for i in range(len(post_list)):
                 if post_list[i] == post_list[i+1]+1:
                     return i, post_list[i]
         except:
+
             return 0,0
 
     def _clean_table(self, table, sort):
@@ -121,15 +120,9 @@ class IhubData(GeneralFunctions):
             URL += "/?NextStart="+str(post_number)
         try:
             content = requests.get(URL).content
-        except Exception as e:
-            print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
-            error_list.append(post_number)
-            return pd.DataFrame(), error_list
-
-        soup = BeautifulSoup(content, "lxml")
-        rows = list(soup.find('table', id="ctl00_CP1_gv"))
-        table = []
-        try:
+            soup = BeautifulSoup(content, "lxml")
+            rows = list(soup.find('table', id="ctl00_CP1_gv"))
+            table = []
             for row in rows[(2+num_pinned):-2]:
                 cell_lst = [cell for cell in list(row)[1:5]]
                 table.append(cell_lst)
@@ -226,7 +219,6 @@ class IhubData(GeneralFunctions):
         # clean and save the new dataframe
             print ('{0} complete, {1} posts added'.format(symbol,
                 new_posts.post_number.max()-start_number))
-            # df.to_csv('data/raw_data/ihub/message_boards/'+self.symbol+'.csv')
             self.post_data = pd.concat([self.post_data,new_posts])
 
         self.post_data.sort_values(['symbol','post_number'],inplace=True)

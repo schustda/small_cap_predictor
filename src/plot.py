@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 import matplotlib
 from matplotlib.dates import date2num
+from src.general_functions import GeneralFunctions
 
 class PlotData(object):
 
@@ -10,7 +11,8 @@ class PlotData(object):
         self.ticker_symbol = ticker_symbol
         self.start_date = start_date
         self.end_date = end_date
-        self.data = pd.read_csv('data/data/'+self.ticker_symbol+'.csv')
+        self.mbp = GeneralFunctions().load_file('combined_data')
+        self.data = self.mbp[self.mbp.symbol == self.ticker_symbol]
 
     # def _ihub(self, df):
     #     df = pd.read_csv('data/ihub/'+self.stock_identifier+'.csv').groupby('date').count().post_number
@@ -46,7 +48,6 @@ class PlotData(object):
 
         # x = pd.to_datetime(self.data.date).dt.to_pydatetime()
         x = self.data.index
-
         plt.style.use('ggplot')
         plt.bar(x,self.data.post_number,label = 'ihub posts',alpha = 0.5)
         plt.bar(x,self.data.dollar_volume,label = 'volume',alpha = 0.5)

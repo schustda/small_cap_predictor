@@ -1,68 +1,60 @@
-from datetime import datetime as dt
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from getpass import getpass
 import numpy as np
 import pandas as pd
-from sklearn.externals import joblib
-from src.data.ihub_data import IhubData
-from src.data.stock_data import StockData
-from src.data.combine_data import CombineData
-from src.data.training_data import TrainingData
-from src.general_functions import GeneralFunctions
-import smtplib
-import subprocess
-from sys import argv
-from time import time,sleep, gmtime
 import xgboost as xgb
 import seaborn as sns
 import matplotlib.pyplot as plt
+from emails.send_emails import Email
+from src.training_data import TrainingData
+from sklearn.externals import joblib
+from time import time,sleep,gmtime
+from datetime import datetime as dt
 
-class DailyPrediction(TrainingData):
+class DailyPrediction(TrainingData,Email):
 
-    def __init__(self,num_days,days_avg,threshold,email_address,password):
-        super().__init__(num_days=num_days,days_avg=days_avg,predict=True)
-        self.num_days = num_days
-        self.days_avg = days_avg
-        self.threshold = threshold
+    def __init__(self,threshold=0.2,now=False):
+        TrainingData.__init__(self,num_days=1200,days_avg=12,predict=True)
+        Email.__init__(self)
         self.predict = True
-        self.email_address = email_address
-        self.password = password
+        self.threshold = threshold
+        self.now = now
 
     def _update_log(self, buy):
-        log = self.import_from_s3('prediction_log','prediction')
+        log = self.import_from_s3('prediction_log')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
         self.save_to_s3(log,'prediction_log')
 
     def plot_pred_percentage(self,predictions):
         symbols, percent = zip(*predictions)
-
         plt.close('all')
-        fig, ax = plt.subplots()
-        edgecolor = ['black']*len(symbols)
+        fig, ax = plt.subplots(figsize=(4,4))
+
+        # Barplot of top stocks
+        plot_params = {'color':'b','edgecolor':['black']*len(symbols)}
         sns.set_color_codes("pastel")
         sns.barplot(x=list(range(len(symbols))), y=[1]*len(symbols),
-                    color='r',
-                   edgecolor=edgecolor)
-
+            alpha = 0.3,**plot_params)
         sns.set_color_codes("muted")
-        sns.barplot(x=list(range(len(symbols))), y=percent,
-        color='r',
-        edgecolor=edgecolor)
+        sns.barplot(x=list(range(len(symbols))), y=percent,**plot_params)
 
-        fig.suptitle('Top 5 Highest Percentage')
-        ax.set_xticklabels(symbols)
-        plt.savefig('images/daily_update.png')
+        # Add labels to the plot
+        text_params = {'ha':'center','va':'center'}
+        for i in range(len(symbols)):
+            label = '{0}%'.format(int(percent[i]*100))
+            ax.text(i,percent[i]+0.04,label,size=12,weight='light',**text_params)
+            ax.text(i,-0.05,symbols[i].upper(),size=15,**text_params)
+        ax.axis('off')
+        plt.tight_layout(rect = [-0.07,0,1,1.05])
+        # plt.savefig('images/daily_update.png')
+        self.save_image_to_s3('daily_update.png')
 
     def _make_predictions(self):
         # Load current model, symbols, and most recent dataset
-        model = joblib.load('data/model/model.pkl')
-        ticker_symbols = self.import_from_s3('ticker_symbols','key')
+        model = joblib.load('model/data/model.pkl')
+        ticker_symbols = self.import_from_s3('ticker_symbols')
         combined_data = self.import_from_s3('combined_data')
 
-        buy = []
-        chance = []
+        buy, chance = [], []
         for _,stock in ticker_symbols.iterrows():
             symbol = stock['symbol']
             data = combined_data[combined_data.symbol == symbol]
@@ -73,22 +65,20 @@ class DailyPrediction(TrainingData):
                 continue
             else:
                 x_pred = self._get_data_point(data.shape[0],data).reshape(1,-1)
-                train_pred_proba = model.predict(xgb.DMatrix(x_pred))
-                train_pred = train_pred_proba.copy()
-                train_mask = train_pred > threshold
-                train_pred[train_mask] = 1
-                train_pred[np.invert(train_mask)] = 0
-                if train_pred == 1:
+                y_pred = model.predict(xgb.DMatrix(x_pred))[0]
+                y_bool = y_pred > self.threshold
+                if y_bool:
                     buy.append(symbol)
-                chance.append((symbol,float(train_pred_proba)))
-                print(symbol, bool(train_pred))
+                chance.append((symbol,y_pred))
+                print(symbol, y_pred, y_bool)
         chance = sorted(chance,key = lambda x: x[1],reverse=True)
         return buy, chance
 
     def update_and_predict(self):
         # can start program at any time, but will only run between 1-2am MST
-        while gmtime().tm_hour != 7:
-            sleep(3600)
+        if not self.now:
+            while gmtime().tm_hour != 7:
+                sleep(3600)
         while True:
             try:
                 interval_time = time()
@@ -96,9 +86,8 @@ class DailyPrediction(TrainingData):
                     pass
                 else:
                     buy,chances = self._make_predictions()
-                    top5 = chances[0:5]
-                    self.plot_pred_percentage(top5)
-                    self.save_image_to_s3('daily_update.png')
+                    self.plot_pred_percentage(chances[0:5])
+                    sleep(30)
                     self.send_email('prediction',buy)
                     self._update_log(buy)
             except Exception as e:
@@ -106,15 +95,4 @@ class DailyPrediction(TrainingData):
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':
-
-    username = input('Gmail Username: ')
-    password = getpass(prompt='Gmail Password: ')
-    if username.count('@') < 1:
-        username += '@gmail.com'
-
-    num_days = 1200
-    days_avg = 12
-    threshold = 0.2
-    p = DailyPrediction(num_days = num_days,days_avg=days_avg,threshold=threshold,
-    email_address = username, password = password)
-    p.update_and_predict()
+    DailyPrediction().update_and_predict()

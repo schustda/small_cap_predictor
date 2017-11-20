@@ -1,9 +1,10 @@
 import pandas as pd
 import datetime as dt
 from src.general_functions import GeneralFunctions
+from emails.send_emails import Email
 
 
-class StockData(GeneralFunctions):
+class StockData(Email,GeneralFunctions):
 
     def __init__(self, update_single=[]):
 
@@ -13,10 +14,7 @@ class StockData(GeneralFunctions):
             self.ticker_symbols = pd.DataFrame(update_single).T
             self.ticker_symbols.columns = ['symbol','url']
         else:
-            self.ticker_symbols = self.import_from_s3('ticker_symbols','key')
-
-            # self.ticker_symbols = pd.read_csv('data/tables/ticker_symbols.csv',
-            #     index_col='key')
+            self.ticker_symbols = self.import_from_s3('ticker_symbols')
 
     def _add_zero_days(self, df):
         '''
@@ -83,8 +81,3 @@ class StockData(GeneralFunctions):
                 self.stock_data = pd.concat([self.stock_data,df])
 
         self.save_file('stock_prices',self.stock_data)
-
-if __name__ == '__main__':
-
-    cbyi = StockData()
-    cbyi.update_stock_data()
