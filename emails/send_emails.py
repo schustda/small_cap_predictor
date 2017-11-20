@@ -21,8 +21,7 @@ class Email(GeneralFunctions):
 
     def _load_html(self,buy):
 
-        # f = codecs.open('emails/html/daily_update.html','r')
-        f = codecs.open('local/htmltemplate.html','r')
+        f = codecs.open('emails/html/daily_update.html','r')
         if buy == None:
             buy = ''
         html = f.read()
