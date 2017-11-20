@@ -22,9 +22,9 @@ class Email(GeneralFunctions):
     def _load_html(self,buy):
 
         # f = codecs.open('emails/html/daily_update.html','r')
+        f = codecs.open('local/htmltemplate.html','r')
         if buy == None:
             buy = ''
-        f = codecs.open('local/htmltemplate.html','r')
         html = f.read()
         return Template(html).safe_substitute(predictions=buy)
 
@@ -41,7 +41,7 @@ class Email(GeneralFunctions):
         elif topic == 'error':
             subject = 'ERROR ALERT'
             body = content
-            to_lst = distribution_list[0]
+            to_lst = self.distribution_list[0]
 
         return subject, body, to_lst
 

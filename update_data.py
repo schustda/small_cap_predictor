@@ -41,4 +41,4 @@ class Update(Email):
 
 if __name__ == '__main__':
 
-    UpdateData().daily_update()
+    Update().daily_update()
