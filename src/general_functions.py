@@ -24,6 +24,10 @@ class GeneralFunctions(object):
                             'prediction_log':'prediction'}
 
     def import_from_s3(self,filename):
+        '''
+        Downloads the 'filename' file that is stored on S3 bucket
+        '''
+
         obj = self.s3_client.get_object(Bucket=self.bucket,Key=filename+'.csv')
         body = obj['Body']
         csv_string = body.read().decode('utf-8')
@@ -31,11 +35,21 @@ class GeneralFunctions(object):
         return pd.read_csv(StringIO(csv_string),index_col=index_col)
 
     def save_to_s3(self,f,filename):
+        '''
+        Saves the file 'f', as 'filename' on the S3 bucket
+        ** csv files only ***
+        '''
+
         csv_buffer = StringIO()
         f.to_csv(csv_buffer)
         self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
 
     def load_file(self,f):
+        '''
+        Special function needed to load 'message_board_posts' and 'stock_prices'
+            files. These have been partitioned into separate chuncks to save
+            space.
+        '''
 
         if f in ['message_board_posts','stock_prices']:
             for i in range(self.breaks):
@@ -50,6 +64,11 @@ class GeneralFunctions(object):
             return self.import_from_s3(f)
 
     def save_file(self,f,df):
+        '''
+        Special function needed to save 'message_board_posts' and 'stock_prices'
+        files. These have been partitioned into separate chuncks to save
+        space.
+        '''
 
         break_lst = list(range(0,df.shape[0],ceil(df.shape[0]/self.breaks)))
         break_lst.append(df.shape[0])
@@ -58,7 +77,7 @@ class GeneralFunctions(object):
 
     def status_update(self,percent):
         '''
-        Method displays progress of retriving message board posts
+        Provides an update every minute on the progress of a given function
         '''
         # Display update ever 60 seconds
         if time() > self.interval_time + 60:
@@ -73,7 +92,7 @@ class GeneralFunctions(object):
 
     def save_image_to_s3(self,filepath):
         '''
-        filepath within the images folder
+        Saves a given image file to the S3 Bucket
         '''
 
         filepath = 'images/'+filepath

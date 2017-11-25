@@ -19,12 +19,25 @@ class DailyPrediction(TrainingData,Email):
         self.now = now
 
     def _update_log(self, buy):
+        '''
+        The prediction log is the file that contains all predictions made by
+            the model and date the prediction was made.
+
+        The function will take every element within the input list 'buy', add it
+            to the log along with the current date and then save.
+        '''
+
         log = self.import_from_s3('prediction_log')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
         self.save_to_s3(log,'prediction_log')
 
     def plot_pred_percentage(self,predictions):
+        '''
+        Informative visualization that shows the stocks that have the current
+            chance of 'buy' signal as predicted by the model.
+        '''
+
         symbols, percent = zip(*predictions)
         plt.close('all')
         fig, ax = plt.subplots(figsize=(4,4))
@@ -49,6 +62,15 @@ class DailyPrediction(TrainingData,Email):
         self.save_image_to_s3('daily_update.png')
 
     def _make_predictions(self):
+        '''
+        This function goes through each symbol in the database and
+            makes a prediction based on the most recent data. If any prediction
+            percentages are above the given threshold, they will be added to the
+            'buy' list and treated as a positive prediction. The function also
+            returns a list of tuples with each symbol and their prediction
+            percentage
+        '''
+
         # Load current model, symbols, and most recent dataset
         model = joblib.load('model/data/model.pkl')
         ticker_symbols = self.import_from_s3('ticker_symbols')
@@ -74,8 +96,19 @@ class DailyPrediction(TrainingData,Email):
         chance = sorted(chance,key = lambda x: x[1],reverse=True)
         return buy, chance
 
-    def update_and_predict(self):
-        # can start program at any time, but will only run between 1-2am MST
+    def daily_prediction(self):
+        '''
+        Function will make model predictions on a daily basis. Intended to be
+            running continuously on a cloud server.
+
+        Performs the following (in order):
+            * Make predictions
+            * Plot visualizations of top stocks
+            * Send emails to distribution list with predictions
+            * Update log with any 'buy' signals 
+        '''
+
+        # can start script at any time, but will only run between 1-2am MST
         if not self.now:
             while gmtime().tm_hour != 7:
                 sleep(3600)
@@ -95,4 +128,4 @@ class DailyPrediction(TrainingData,Email):
             sleep(60*60*24-(time()-interval_time))
 
 if __name__ == '__main__':
-    DailyPrediction().update_and_predict()
+    DailyPrediction().daily_prediction()

@@ -22,6 +22,12 @@ class IhubData(Email,GeneralFunctions):
         self.delay = delay
 
     def _check_link_integrity(self,link):
+        '''
+        If a stock has updated it's symbol, the investorshub website will have
+            a new link for the message board forum. This function is a failsafe
+            to make sure the symbol is correct.
+        '''
+
         URL = "https://investorshub.advfn.com/"+str(link)
         content = requests.get(URL).content
         soup = BeautifulSoup(content, "lxml")
@@ -29,6 +35,12 @@ class IhubData(Email,GeneralFunctions):
         return tag
 
     def _update_link(self,symbol,ihub_url,tag):
+        '''
+        If the symbol has been updated, this function will update the databases
+            for the messsage boards, stock prices, ticker_symbols.
+
+        The function will also send an email update to notify the user
+        '''
 
         new_symbol = tag.split('-')[-2].lower()
         self.send_email('update_symbol',[symbol,new_symbol])
@@ -62,7 +74,6 @@ class IhubData(Email,GeneralFunctions):
         '''
 
         try:
-
             # Retrieve the first page on the board
             df, _ = self._get_page(url,most_recent=True,sort = False)
 
@@ -73,7 +84,6 @@ class IhubData(Email,GeneralFunctions):
                 if post_list[i] == post_list[i+1]+1:
                     return i, post_list[i]
         except:
-
             return 0,0
 
     def _clean_table(self, table, sort):

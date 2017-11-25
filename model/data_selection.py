@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from src.data.training_data import CreateTrainingData
+from src.training_data import TrainingData
 from sklearn.metrics import roc_auc_score,recall_score,precision_score
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 
-class DataSelection(CreateTrainingData):
+class DataSelection(TrainingData):
     def __init__(self,param,units,param2 = 0,units2 = 0):
         super().__init__()
         self.param = param
@@ -26,12 +26,16 @@ class DataSelection(CreateTrainingData):
         self.gb = self._emptydf('Gradient Boost')
         self.xgb = self._emptydf('XGBoost')
         self.svc = self._emptydf('SVC')
+        self.days_avg = 1
+
+
+
 
         #Deduced from previous trials
         self.percentage = 0.2
         self.method = 'random_undersampling'
-        self.num_days = 1200
-        self.days_avg = 10
+        # self.num_days = 1200
+        # self.days_avg = 12
 
     def _score_model(self,model,type,threshold = 0.5):
         if type == 'sklearn':
@@ -172,23 +176,23 @@ class DataSelection(CreateTrainingData):
             for axis,model in plot_lst:
                 self._plot(axis,model,score_type)
 
-            plt.savefig('images/model_development/data_selection/{0}/{1}.jpg'
+            plt.savefig('model/model_development/data_selection/{0}/{1}.jpg'
                 .format(title,score_type))
 
 
 
 if __name__ == '__main__':
-    # num_days = [5,10,20,50,100,500,1000]
-    num_days = list(range(500,1501,100))
-    # ds = DataSelection('num_days',num_days)
+    num_days = [5,10,20,50,100,500,1000]
+    # num_days = list(range(500,1501,100))
+    ds = DataSelection('num_days',num_days)
 
-    days_avg = [1,2,3,4,5,6,8,10,12,15,20]
-    ds = DataSelection('days_avg',days_avg)
+    # days_avg = [1,2,3,4,5,6,8,10,12,15,20]
+    # ds = DataSelection('days_avg',days_avg)
 
-    percentage = [1,0.85,0.7,.55,0.4,0.25,0.1]
+    # percentage = [1,0.85,0.7,.55,0.4,0.25,0.1]
     # ds = DataSelection('percentage',percentage,'method','random_undersampling')
 
-    times_to_resample = [1,2,5,10,15,20,30,50,100]
-    ds = DataSelection('times_to_resample',times_to_resample,'method','random_oversampling')
+    # times_to_resample = [1,2,5,10,15,20,30,50,100]
+    # ds = DataSelection('times_to_resample',times_to_resample,'method','random_oversampling')
 
     ds.run()

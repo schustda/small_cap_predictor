@@ -16,6 +16,12 @@ class CombineData(GeneralFunctions):
 
     def _calculate_ohlc(self,df):
         '''
+        OHLC Average (open-high-low-close) is a commonly used indicator to
+        determine a stock price on a given day
+        Dollar Volume is a better predictor than volume alone. i.e. a stock trading
+        1M volume at a $0.10 price should be treated differently than a stock
+        trading 1M volume at a $10 price
+
         Parameters
         ----------
         df: pandas dataframe, stock price info
@@ -23,12 +29,6 @@ class CombineData(GeneralFunctions):
         Output
         ------
         df: pandas dataframe, ohlc and dollar volume of stock
-
-        OHLC Average (open-high-low-close) is a commonly used indicator to
-            determine a stock price on a given day
-        Dollar Volume is a better predictor than volume alone. i.e. a stock trading
-            1M volume at a $0.10 price should be treated differently than a stock
-            trading 1M volume at a $10 price
         '''
 
         #fillna's
@@ -54,6 +54,10 @@ class CombineData(GeneralFunctions):
         return df.drop(holiday_dates.union(weekend_dates),errors='ignore')
 
     def compile_data(self):
+        '''
+        Combines data from ihub message boards, and stock price history
+            databases and calculates the target.
+        '''
 
         first = True
         for _, stock in self.ticker_symbols.iterrows():
@@ -80,6 +84,7 @@ class CombineData(GeneralFunctions):
 
             t = DefineTarget(combined_data)
             combined_data['target'] = t.target
+
             combined_data['symbol'] = symbol
 
             if first == True:

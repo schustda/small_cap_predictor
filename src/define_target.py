@@ -5,28 +5,25 @@ class DefineTarget(object):
 
     def __init__(self,data):
         self.data = data
-        self.stock_size = self._big_or_small()
         self.target = self.add_target()
 
-
-    def _big_or_small(self):
-        sub_penny_count = self.data.where(self.data.ohlc < 0.01).count().post_number
-        sub_penny_percentage = sub_penny_count/self.data.shape[0]
-
-        if sub_penny_count > 0.25:
-            return 'sub_penny'
-        else:
-            return 'small_cap'
-
-    # def _import_data(self):
-    #     df = pd.read_csv('data/data/'+self.ticker_symbol+'.csv')
-    #     df.dropna(inplace=True)
-    #     df.set_index('date',inplace=True)
-    #     return df
-
-
-
     def add_target(self):
+        '''
+        Define target given a data point. Current critera are as follows:
+            * Average price for the following market week is double what the
+                current price is
+            * Average price for the following two market weeks is one and a half
+                times what the current price is
+            * The stock price is not currently zero
+            * Average price for the following two market weeks is more than
+                $0.00015
+            * The stock has been around for at least 60 days
+                * Normally at inception funky things happen with the price
+                    that are difficult to capture
+            * The dollar volume for during following two weeks is more than
+                $500 per day.
+        '''
+
         target = []
         print('generating target...')
         for i in range(self.data.shape[0]-11):
@@ -47,19 +44,10 @@ class DefineTarget(object):
                 target.append(1)
             else:
                 target.append(0)
+
+        # Last two weeks treated as N/A since future week prices cannot be obtained
         na = [None]*11
         target.extend(na)
+
         self.data['target'] = target
         return target
-
-
-if __name__ == '__main__':
-    target = DefineTarget('cbyi')
-    df = target.data
-    t = target.target
-#
-# for day in df.index:
-#     two_wk_avg =
-#
-#
-# big cap or small cap???

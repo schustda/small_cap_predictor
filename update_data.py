@@ -12,6 +12,13 @@ class Update(Email):
         self.delay = delay
 
     def _update(self):
+        '''
+        Updates the data hosted on S3 through the IhubData, StockData, and
+            CombineData modules.
+
+        To avoid high memory usage, each module is called then subsequently
+            removed from memory.
+        '''
 
         ihub = IhubData(delay=self.delay,verbose=1)
         ihub.pull_posts()
@@ -26,6 +33,11 @@ class Update(Email):
         del cd
 
     def daily_update(self):
+        '''
+        Function called to update the data on a daily basis. Intended to be
+            running continuously on a cloud server.
+        '''
+
         # can start program at any time, but will only run between 1-2am MST
         if not self.now:
             while gmtime().tm_hour != 6:
