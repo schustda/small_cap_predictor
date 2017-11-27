@@ -2,7 +2,7 @@ import boto3
 import pandas as pd
 import matplotlib.pyplot as plt
 from math import ceil
-from time import time
+from time import time, sleep
 from os import environ as e
 from io import StringIO, BytesIO
 
@@ -58,6 +58,7 @@ class GeneralFunctions(object):
                     df = df_load
                 else:
                     df = pd.concat([df,df_load])
+                sleep(10)
             return df
 
         else:
