@@ -13,7 +13,7 @@ class Email(GeneralFunctions):
         super().__init__()
         self.email_address = 'smallcappredictor@gmail.com'
         self.email_password = e['email_password']
-        self.distribution_list = self.import_from_s3('distribution_list').email_address.tolist()
+        self.distribution_list = self.load_file('distribution_list').email_address.tolist()
         self.msg_type = {'update_symbol':'plain','error':'plain','prediction':'html'}
 
     def _load_html(self,buy):
@@ -21,7 +21,6 @@ class Email(GeneralFunctions):
         The content of the 'prediction' email is generated through an html file.
             This function loads the file.
         '''
-
 
         f = codecs.open('emails/html/daily_update.html','r')
         if buy == None:
@@ -37,7 +36,7 @@ class Email(GeneralFunctions):
         if topic == 'update_symbol ':
             subject = "Symbol updated"
             body = 'Ticker symbol {0} changed to {1}'.format(content[0],content[1])
-            to_lst = self.distribution_list[0]
+            to_lst = [self.distribution_list[0]]
         elif topic == 'prediction':
             subject = "Daily Small Cap Predictor Summary for {0}".format(str(datetime.today().date()))
             body = self._load_html(", ".join(content).upper())
@@ -45,7 +44,7 @@ class Email(GeneralFunctions):
         elif topic == 'error':
             subject = 'ERROR ALERT'
             body = content
-            to_lst = self.distribution_list[0]
+            to_lst = [self.distribution_list[0]]
 
         return subject, body, to_lst
 

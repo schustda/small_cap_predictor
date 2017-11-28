@@ -18,7 +18,7 @@ class IhubData(Email,GeneralFunctions):
             self.ticker_symbols = pd.DataFrame(update_single).T
             self.ticker_symbols.columns = ['symbol','url']
         else:
-            self.ticker_symbols = self.import_from_s3('ticker_symbols')
+            self.ticker_symbols = self.load_file('ticker_symbols')
         self.delay = delay
 
     def _check_link_integrity(self,link):
@@ -59,7 +59,7 @@ class IhubData(Email,GeneralFunctions):
         df = self.load_file('stock_prices')
         idx = df[df.symbol == symbol].index
         df.loc[idx,'symbol'] = new_symbol
-        self.save_file('stock_prices',df)
+        self.save_file(df,'stock_prices')
 
         return new_symbol, tag
 
@@ -233,7 +233,7 @@ class IhubData(Email,GeneralFunctions):
 
         self.post_data.sort_values(['symbol','post_number'],inplace=True)
         self.post_data.reset_index(inplace=True,drop=True)
-        self.save_file('message_board_posts',self.post_data)
+        self.save_file(self.post_data,'message_board_posts')
 
 if __name__ == '__main__':
     data = IhubData(verbose = 1)

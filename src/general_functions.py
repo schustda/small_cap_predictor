@@ -8,8 +8,7 @@ from io import StringIO, BytesIO
 
 class GeneralFunctions(object):
 
-    def __init__(self, breaks=10):
-        self.breaks = breaks
+    def __init__(self):
         self.s3_url = 'https://s3.amazonaws.com/small-cap-predictor/'
         self.bucket = 'small-cap-predictor'
         self.s3_resource = boto3.resource('s3',
@@ -23,7 +22,7 @@ class GeneralFunctions(object):
                             'ticker_symbols': 'key',
                             'prediction_log':'prediction'}
 
-    def import_from_s3(self,filename):
+    def load_file(self,filename):
         '''
         Downloads the 'filename' file that is stored on S3 bucket
         '''
@@ -34,47 +33,15 @@ class GeneralFunctions(object):
         index_col = self.index_col.get(filename,None)
         return pd.read_csv(StringIO(csv_string),index_col=index_col)
 
-    def save_to_s3(self,f,filename):
+    def save_file(self,df,filename):
         '''
         Saves the file 'f', as 'filename' on the S3 bucket
         ** csv files only ***
         '''
 
         csv_buffer = StringIO()
-        f.to_csv(csv_buffer)
+        df.to_csv(csv_buffer)
         self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
-
-    def load_file(self,f):
-        '''
-        Special function needed to load 'message_board_posts' and 'stock_prices'
-            files. These have been partitioned into separate chuncks to save
-            space.
-        '''
-
-        if f in ['message_board_posts','stock_prices']:
-            for i in range(self.breaks):
-                df_load = self.import_from_s3('{0}/{0}{1}'.format(f,i))
-                if i == 0:
-                    df = df_load
-                else:
-                    df = pd.concat([df,df_load])
-                sleep(10)
-            return df
-
-        else:
-            return self.import_from_s3(f)
-
-    def save_file(self,f,df):
-        '''
-        Special function needed to save 'message_board_posts' and 'stock_prices'
-        files. These have been partitioned into separate chuncks to save
-        space.
-        '''
-
-        break_lst = list(range(0,df.shape[0],ceil(df.shape[0]/self.breaks)))
-        break_lst.append(df.shape[0])
-        for i in range(len(break_lst)-1):
-            self.save_to_s3(df[break_lst[i]:break_lst[i+1]],'{0}/{0}{1}'.format(f,i))
 
     def status_update(self,percent):
         '''

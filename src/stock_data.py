@@ -14,7 +14,7 @@ class StockData(Email,GeneralFunctions):
             self.ticker_symbols = pd.DataFrame(update_single).T
             self.ticker_symbols.columns = ['symbol','url']
         else:
-            self.ticker_symbols = self.import_from_s3('ticker_symbols')
+            self.ticker_symbols = self.load_file('ticker_symbols')
 
     def _add_zero_days(self, df):
         '''
@@ -80,4 +80,4 @@ class StockData(Email,GeneralFunctions):
             else:
                 self.stock_data = pd.concat([self.stock_data,df])
 
-        self.save_file('stock_prices',self.stock_data)
+        self.save_file(self.stock_data,'stock_prices')

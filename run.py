@@ -27,10 +27,10 @@ class DailyPrediction(TrainingData,Email):
             to the log along with the current date and then save.
         '''
 
-        log = self.import_from_s3('prediction_log')
+        log = self.load_file('prediction_log')
         for symbol in buy:
             log.loc[log.index.max()+1] =[str(dt.today().date()),symbol]
-        self.save_to_s3(log,'prediction_log')
+        self.save_file(log,'prediction_log')
 
     def plot_pred_percentage(self,predictions):
         '''
@@ -73,8 +73,8 @@ class DailyPrediction(TrainingData,Email):
 
         # Load current model, symbols, and most recent dataset
         model = joblib.load('model/data/model.pkl')
-        ticker_symbols = self.import_from_s3('ticker_symbols')
-        combined_data = self.import_from_s3('combined_data')
+        ticker_symbols = self.load_file('ticker_symbols')
+        combined_data = self.load_file('combined_data')
 
         buy, chance = [], []
         for _,stock in ticker_symbols.iterrows():
@@ -105,7 +105,7 @@ class DailyPrediction(TrainingData,Email):
             * Make predictions
             * Plot visualizations of top stocks
             * Send emails to distribution list with predictions
-            * Update log with any 'buy' signals 
+            * Update log with any 'buy' signals
         '''
 
         # can start script at any time, but will only run between 1-2am MST
@@ -125,7 +125,10 @@ class DailyPrediction(TrainingData,Email):
                     self._update_log(buy)
             except Exception as e:
                 self.send_email('error',str(e))
-            sleep(60*60*24-(time()-interval_time))
+            if not self.now:
+                sleep(60*60*24-(time()-interval_time))
+            else:
+                break
 
 if __name__ == '__main__':
     DailyPrediction().daily_prediction()

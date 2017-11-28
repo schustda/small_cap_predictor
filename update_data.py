@@ -48,7 +48,11 @@ class Update(Email):
                 self._update()
             except Exception as e:
                 self.send_email('error',str(e))
-            sleep(60*60*24-(time()-interval_time))
+            if not self.now:
+                sleep(60*60*24-(time()-interval_time))
+            else:
+                break
+
 
 
 if __name__ == '__main__':
