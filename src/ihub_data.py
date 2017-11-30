@@ -13,12 +13,13 @@ class IhubData(Email,GeneralFunctions):
         super().__init__()
         self.verbose = verbose
         self.update_single = update_single
+        # self.post_data = self.load_file('message_board_posts')
         self.post_data = self.load_file('message_board_posts')
-        if self.update_single != []:
-            self.ticker_symbols = pd.DataFrame(update_single).T
-            self.ticker_symbols.columns = ['symbol','url']
+        self.ticker_symbols = self.load_file('ticker_symbols')
+        if self.update_single:
+            self.indexer = self.ticker_symbols.index.max()
         else:
-            self.ticker_symbols = self.load_file('ticker_symbols')
+            self.indexer = 0
         self.delay = delay
 
     def _check_link_integrity(self,link):
@@ -142,7 +143,6 @@ class IhubData(Email,GeneralFunctions):
             error_list.append(post_number)
             return pd.DataFrame(), error_list
 
-
     def _add_deleted_posts(self, df, start, end):
         '''
         Parameters
@@ -177,29 +177,29 @@ class IhubData(Email,GeneralFunctions):
         return df
 
     def pull_posts(self):
-        for _, stock in self.ticker_symbols.iterrows():
+        for _, stock in self.ticker_symbols.loc[self.indexer:].iterrows():
             self.interval_time, self.original_time = time(), time()
-            symbol, ihub_url = stock['symbol'],stock['url']
+            idx = stock.name
+            symbol, ihub_url, last_post = stock['symbol'],stock['url'],stock['last_post']
             tag = self._check_link_integrity(ihub_url)
             if tag != ihub_url:
                 print ('{0} changing to {1}'.format(ihub_url,tag))
                 symbol, ihub_url = self._update_link(symbol,ihub_url,tag)
+
             df = self.post_data[self.post_data.symbol == symbol]
             num_pinned, num_posts = self._total_and_num_pinned(ihub_url)
 
             if len(df) == 0:
                 start_number = 0
             else:
-                start_number = df.post_number.max()
+                start_number = last_post
 
-            if (num_posts == df.post_number.max()) or (num_posts == 0):
+            if num_posts in [0,last_post]:
                 print('No posts added for {0}'.format(symbol))
                 continue
-
             pages_to_add = list(range(start_number,num_posts,50))
             pages_to_add.append(num_posts)
             number_of_pages = len(pages_to_add)
-
             error_list, first = [], True
 
             for num,page in enumerate(pages_to_add):
@@ -229,12 +229,28 @@ class IhubData(Email,GeneralFunctions):
         # clean and save the new dataframe
             print ('{0} complete, {1} posts added'.format(symbol,
                 new_posts.post_number.max()-start_number))
-            self.post_data = pd.concat([self.post_data,new_posts])
 
-        self.post_data.sort_values(['symbol','post_number'],inplace=True)
+            new_posts = new_posts.groupby(['date','symbol'],as_index=False).count()
+            new_posts.date = new_posts.date.astype(str)
+
+            last_date = df.index.max()
+            if df.loc[last_date,'date'] == new_posts.loc[0,'date']:
+                self.post_data.loc[last_date,'post_number'] += new_posts.loc[0,'post_number']
+                new_posts = new_posts.loc[1:]
+            self.post_data = pd.concat([self.post_data,new_posts])
+            self.ticker_symbols.loc[idx,'last_post'] = num_posts
+
+        self.post_data.sort_values(['symbol','date'],inplace=True)
         self.post_data.reset_index(inplace=True,drop=True)
+        self.save_file(self.ticker_symbols,'ticker_symbols')
         self.save_file(self.post_data,'message_board_posts')
 
 if __name__ == '__main__':
     data = IhubData(verbose = 1)
-    data.pull_posts()
+    df_old = data.post_data
+    data.pull_posts_test()
+    df_new = data.post_data
+    # df1 = data.new_posts
+    # df2 = data.df
+
+    # abhi = df[df.symbol=='abhi']

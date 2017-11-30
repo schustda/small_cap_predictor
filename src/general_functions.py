@@ -20,7 +20,8 @@ class GeneralFunctions(object):
         self.index_col = {'message_board_posts': 0,
                             'stock_prices': 'Date',
                             'ticker_symbols': 'key',
-                            'prediction_log':'prediction'}
+                            'prediction_log':'prediction',
+                            'test':0}
 
     def load_file(self,filename):
         '''

@@ -64,13 +64,16 @@ class CombineData(GeneralFunctions):
             symbol = stock['symbol']
             print ('Compiling data for ' + symbol)
             mbp = self.message_board_posts[self.message_board_posts.symbol == symbol]
-            sp = self.stock_prices[self.stock_prices.symbol == symbol]
-            mbp = mbp.drop('symbol',axis=1)
-            sp = sp.drop('symbol',axis=1)
+            mbp.index = pd.to_datetime(mbp.date)
+            grouped_posts = mbp.post_number
 
+            sp = self.stock_prices[self.stock_prices.symbol == symbol]
+            # mbp = mbp.drop('symbol',axis=1)
+            sp = sp.drop('symbol',axis=1)
             sp = self._calculate_ohlc(sp)
-            grouped_posts = mbp.groupby('date').count().post_number
-            grouped_posts.index = pd.to_datetime(grouped_posts.index)
+
+            # grouped_posts = mbp.groupby('date').count().post_number
+            # grouped_posts.index = pd.to_datetime(grouped_posts.index)
 
             start_date = max([min(grouped_posts.index.tolist()),min(sp.index.tolist())])
             end_date = max([max(grouped_posts.index.tolist()),max(sp.index.tolist())])
