@@ -70,8 +70,8 @@ class StockData(Email,GeneralFunctions):
                 df = self._add_zero_days(df)
                 df['symbol'] = symbol
             except Exception as e:
-                df = df[df['symbol'] == symbol]
-                self.send_email('error',e)
+                df = self.stock_data[self.stock_data.symbol == symbol]
+                self.send_email('error','Problem with {0}'.format(symbol))
                 print ('Error for {0}'.format(symbol))
 
             if first:
@@ -81,3 +81,6 @@ class StockData(Email,GeneralFunctions):
                 self.stock_data = pd.concat([self.stock_data,df])
 
         self.save_file(self.stock_data,'stock_prices')
+
+if __name__ == '__main__':
+    StockData().update_stock_data()

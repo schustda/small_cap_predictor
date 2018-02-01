@@ -33,7 +33,7 @@ class Email(GeneralFunctions):
         Returns the subject, body, and recipients of the specified email
         '''
 
-        if topic == 'update_symbol ':
+        if topic == 'update_symbol':
             subject = "Symbol updated"
             body = 'Ticker symbol {0} changed to {1}'.format(content[0],content[1])
             to_lst = [self.distribution_list[0]]

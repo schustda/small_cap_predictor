@@ -130,15 +130,15 @@ class TrainingData(GeneralFunctions):
         #     full_dataset = np.vstack([full_dataset,stock_array])
         # train, test = train_test_split(full_dataset)
         train, test = train_test_split(stock_array,random_state=10)
-        np.savetxt('data/model/train.csv',train,delimiter=",")
-        np.savetxt('data/model/test.csv',test,delimiter=",")
+        np.savetxt('model/model_development/data/train.csv',train,delimiter=",")
+        np.savetxt('model/model_development/data/test.csv',test,delimiter=",")
 
 
 if __name__ == '__main__':
 
     # td = CreateTrainingData(num_days = 100, days_avg = 1,method = 'random_oversampling',
     #                         times_to_resample = 20)
-    td = TrainingData(num_days = 1200, days_avg = 12,method = 'random_undersampling',
+    td = TrainingData(num_days = 260, days_avg = 1, method = 'random_undersampling',
                 percentage = 0.2)
     td.generate_training_data()
 

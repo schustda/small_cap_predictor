@@ -9,11 +9,10 @@ from emails.send_emails import Email
 
 class IhubData(Email,GeneralFunctions):
 
-    def __init__(self, verbose=0, update_single=[],delay=False):
+    def __init__(self, verbose=0, update_single=False,delay=False):
         super().__init__()
         self.verbose = verbose
         self.update_single = update_single
-        # self.post_data = self.load_file('message_board_posts')
         self.post_data = self.load_file('message_board_posts')
         self.ticker_symbols = self.load_file('ticker_symbols')
         if self.update_single:
@@ -48,9 +47,9 @@ class IhubData(Email,GeneralFunctions):
 
         # update ticker symbol database and save
         idx = self.ticker_symbols[self.ticker_symbols.symbol == symbol].index[0]
-        self.ticker_symbols.loc[idx]['url'] = tag
-        self.ticker_symbols.loc[idx]['symbol'] = new_symbol
-        self.ticker_symbols.to_csv('data/tables/ticker_symbols.csv')
+        self.ticker_symbols.loc[idx,'url'] = tag
+        self.ticker_symbols.loc[idx,'symbol'] = new_symbol
+        self.save_file(self.ticker_symbols,'ticker_symbols')
 
         # update message board data
         idx = self.post_data[self.post_data.symbol == symbol].index
@@ -234,13 +233,18 @@ class IhubData(Email,GeneralFunctions):
             new_posts.date = new_posts.date.astype(str)
 
             last_date = df.index.max()
-            if df.loc[last_date,'date'] == new_posts.loc[0,'date']:
-                self.post_data.loc[last_date,'post_number'] += new_posts.loc[0,'post_number']
-                new_posts = new_posts.loc[1:]
+
+            try:
+                if df.loc[last_date,'date'] == new_posts.loc[0,'date']:
+                    self.post_data.loc[last_date,'post_number'] += new_posts.loc[0,'post_number']
+                    new_posts = new_posts.loc[1:]
+            except:
+                pass
             self.post_data = pd.concat([self.post_data,new_posts])
             self.ticker_symbols.loc[idx,'last_post'] = num_posts
 
         self.post_data.sort_values(['symbol','date'],inplace=True)
+        self.post_data = self.post_data.groupby(['date','symbol'],as_index=False).agg(lambda x:x.value_counts().index[0])
         self.post_data.reset_index(inplace=True,drop=True)
         self.save_file(self.ticker_symbols,'ticker_symbols')
         self.save_file(self.post_data,'message_board_posts')

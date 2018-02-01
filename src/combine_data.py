@@ -5,8 +5,10 @@ from math import isnan
 import pathlib
 from src.define_target import DefineTarget
 from src.general_functions import GeneralFunctions
+from emails.send_emails import Email
 
-class CombineData(GeneralFunctions):
+
+class CombineData(Email,GeneralFunctions):
 
     def __init__(self):
         super().__init__()
@@ -61,40 +63,44 @@ class CombineData(GeneralFunctions):
 
         first = True
         for _, stock in self.ticker_symbols.iterrows():
-            symbol = stock['symbol']
-            print ('Compiling data for ' + symbol)
-            mbp = self.message_board_posts[self.message_board_posts.symbol == symbol]
-            mbp.index = pd.to_datetime(mbp.date)
-            grouped_posts = mbp.post_number
+            try:
+                symbol = stock['symbol']
+                print ('Compiling data for ' + symbol)
+                mbp = self.message_board_posts[self.message_board_posts.symbol == symbol]
+                mbp.index = pd.to_datetime(mbp.date)
+                grouped_posts = mbp.post_number
 
-            sp = self.stock_prices[self.stock_prices.symbol == symbol]
-            # mbp = mbp.drop('symbol',axis=1)
-            sp = sp.drop('symbol',axis=1)
-            sp = self._calculate_ohlc(sp)
+                sp = self.stock_prices[self.stock_prices.symbol == symbol]
+                # mbp = mbp.drop('symbol',axis=1)
+                sp = sp.drop('symbol',axis=1)
+                sp = self._calculate_ohlc(sp)
 
-            # grouped_posts = mbp.groupby('date').count().post_number
-            # grouped_posts.index = pd.to_datetime(grouped_posts.index)
+                # grouped_posts = mbp.groupby('date').count().post_number
+                # grouped_posts.index = pd.to_datetime(grouped_posts.index)
 
-            start_date = max([min(grouped_posts.index.tolist()),min(sp.index.tolist())])
-            end_date = max([max(grouped_posts.index.tolist()),max(sp.index.tolist())])
-            df_date = pd.DataFrame(pd.date_range(start_date,end_date)).set_index(0)
+                start_date = max([min(grouped_posts.index.tolist()),min(sp.index.tolist())])
+                end_date = max([max(grouped_posts.index.tolist()),max(sp.index.tolist())])
+                df_date = pd.DataFrame(pd.date_range(start_date,end_date)).set_index(0)
 
-            combined_data = df_date.join(grouped_posts).join(sp)
-            combined_data['weekday'] = combined_data.index.weekday
-            combined_data = self._remove_weekends_and_holidays(combined_data)
-            combined_data.index.name = 'date'
-            combined_data.fillna(0,inplace=True)
+                combined_data = df_date.join(grouped_posts).join(sp)
+                combined_data['weekday'] = combined_data.index.weekday
+                combined_data = self._remove_weekends_and_holidays(combined_data)
+                combined_data.index.name = 'date'
+                combined_data.fillna(0,inplace=True)
 
-            t = DefineTarget(combined_data)
-            combined_data['target'] = t.target
+                t = DefineTarget(combined_data)
+                combined_data['target'] = t.target
 
-            combined_data['symbol'] = symbol
+                combined_data['symbol'] = symbol
 
-            if first == True:
-                final = combined_data
-                first = False
-            else:
-                final = pd.concat([final,combined_data])
+                if first == True:
+                    final = combined_data
+                    first = False
+                else:
+                    final = pd.concat([final,combined_data])
+            except:
+                self.send_email('error','Problem with {0}'.format(symbol))
+                print ('Error for {0}'.format(symbol))
 
         self.save_file(final,'combined_data')
 

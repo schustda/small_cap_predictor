@@ -1,5 +1,3 @@
-import numpy as np
-import pandas as pd
 import xgboost as xgb
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -121,7 +119,8 @@ class DailyPrediction(TrainingData,Email):
                     buy,chances = self._make_predictions()
                     self.plot_pred_percentage(chances[0:5])
                     sleep(30)
-                    self.send_email('prediction',buy)
+                    if len(buy) > 1:
+                        self.send_email('prediction',buy)
                     self._update_log(buy)
             except Exception as e:
                 self.send_email('error',str(e))
