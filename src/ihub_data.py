@@ -73,18 +73,18 @@ class IhubData(Email,GeneralFunctions):
             the specific board
         '''
 
-        try:
-            # Retrieve the first page on the board
-            df, _ = self._get_page(url,most_recent=True,sort = False)
+        # try:
+        # Retrieve the first page on the board
+        df, _ = self._get_page(url,most_recent=True,sort = False)
 
-            # Number of pinned posts determined by the number of posts that are not
-            # in 'numerical' order at the top of the page
-            post_list = df.post_number.tolist()
-            for i in range(len(post_list)):
-                if post_list[i] == post_list[i+1]+1:
-                    return i, post_list[i]
-        except:
-            return 0,0
+        # Number of pinned posts determined by the number of posts that are not
+        # in 'numerical' order at the top of the page
+        post_list = df.post_number.tolist()
+        for i in range(len(post_list)):
+            if post_list[i] == post_list[i+1]+1:
+                return i, post_list[i]
+        # except:
+        #     return 0,0
 
     def _clean_table(self, table, sort):
         '''
@@ -104,7 +104,8 @@ class IhubData(Email,GeneralFunctions):
         df.drop([1,2],axis=1,inplace=True)
         df = df.applymap(lambda x: x.text)
         df.columns = ['post_number','date']
-        df.post_number = df['post_number'].map(lambda x: x.strip('-#\n\r').replace('\n', "").replace('\r',''))
+        df.post_number = df['post_number'].map(lambda x: x.strip('-#\n\r').replace(' ','').replace('\n', "").replace('\r','').replace('\xa00',''))
+        df.post_number = df.post_number.astype(float)
         df.post_number = df.post_number.astype(int)
         df['date'] = pd.to_datetime(df['date']).dt.date
         if sort:
@@ -128,19 +129,19 @@ class IhubData(Email,GeneralFunctions):
         URL = "https://investorshub.advfn.com/"+str(url)
         if not most_recent:
             URL += "/?NextStart="+str(post_number)
-        try:
-            content = requests.get(URL).content
-            soup = BeautifulSoup(content, "lxml")
-            rows = list(soup.find('table', id="ctl00_CP1_gv"))
-            table = []
-            for row in rows[(2+num_pinned):-2]:
-                cell_lst = [cell for cell in list(row)[1:5]]
-                table.append(cell_lst)
-            return self._clean_table(table,sort), error_list
-        except Exception as e:
-            print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
-            error_list.append(post_number)
-            return pd.DataFrame(), error_list
+        # try:
+        content = requests.get(URL).content
+        soup = BeautifulSoup(content, "lxml")
+        rows = list(soup.find('table', id="ctl00_CP1_gv"))
+        table = []
+        for row in rows[(2+num_pinned):-2]:
+            cell_lst = [cell for cell in list(row)[1:5]]
+            table.append(cell_lst)
+        return self._clean_table(table,sort), error_list
+        # except Exception as e:
+        #     print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),url))
+        #     error_list.append(post_number)
+        #     return pd.DataFrame(), error_list
 
     def _add_deleted_posts(self, df, start, end):
         '''
@@ -234,12 +235,12 @@ class IhubData(Email,GeneralFunctions):
 
             last_date = df.index.max()
 
-            try:
-                if df.loc[last_date,'date'] == new_posts.loc[0,'date']:
-                    self.post_data.loc[last_date,'post_number'] += new_posts.loc[0,'post_number']
-                    new_posts = new_posts.loc[1:]
-            except:
-                pass
+            # try:
+            if df.loc[last_date,'date'] == new_posts.loc[0,'date']:
+                self.post_data.loc[last_date,'post_number'] += new_posts.loc[0,'post_number']
+                new_posts = new_posts.loc[1:]
+            # except:
+            #     pass
             self.post_data = pd.concat([self.post_data,new_posts])
             self.ticker_symbols.loc[idx,'last_post'] = num_posts
 
@@ -251,9 +252,15 @@ class IhubData(Email,GeneralFunctions):
 
 if __name__ == '__main__':
     data = IhubData(verbose = 1)
-    df_old = data.post_data
-    data.pull_posts_test()
-    df_new = data.post_data
+
+    data.pull_posts()
+
+    # url ='Adaptive-Medias-Inc-ADTM-18824'
+    # df = data._get_page(url,post_number = 38050,sort = True)[0]
+
+    # df_old = data.post_data
+    # data.pull_posts()
+    # df_new = data.post_data
     # df1 = data.new_posts
     # df2 = data.df
 
