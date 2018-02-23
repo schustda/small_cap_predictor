@@ -8,7 +8,7 @@ from io import StringIO, BytesIO
 
 class GeneralFunctions(object):
 
-    def __init__(self):
+    def __init__(self, local=False):
         self.s3_url = 'https://s3.amazonaws.com/small-cap-predictor/'
         self.bucket = 'small-cap-predictor'
         self.s3_resource = boto3.resource('s3',
@@ -21,28 +21,36 @@ class GeneralFunctions(object):
                             'stock_prices': 'Date',
                             'ticker_symbols': 'key',
                             'prediction_log':'prediction',
-                            'test':0}
+                            'test':0,
+                            'predictions':0}
+        self.local = local
 
     def load_file(self,filename):
         '''
         Downloads the 'filename' file that is stored on S3 bucket
         '''
-
-        obj = self.s3_client.get_object(Bucket=self.bucket,Key=filename+'.csv')
-        body = obj['Body']
-        csv_string = body.read().decode('utf-8')
-        index_col = self.index_col.get(filename,None)
-        return pd.read_csv(StringIO(csv_string),index_col=index_col)
+        if self.local:
+            f = 'data/{0}.csv'.format(filename)
+            index_col = self.index_col.get(filename,None)
+        else:
+            obj = self.s3_client.get_object(Bucket=self.bucket,Key=filename+'.csv')
+            body = obj['Body']
+            csv_string = body.read().decode('utf-8')
+            f = StringIO(csv_string)
+            index_col = self.index_col.get(filename,None)
+        return pd.read_csv(f,index_col=index_col)
 
     def save_file(self,df,filename):
         '''
         Saves the file 'f', as 'filename' on the S3 bucket
         ** csv files only ***
         '''
-
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer)
-        self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
+        if self.local:
+            df.to_csv('data/{0}.csv'.format(filename))
+        else:
+            csv_buffer = StringIO()
+            df.to_csv(csv_buffer)
+            self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
 
     def status_update(self,percent):
         '''

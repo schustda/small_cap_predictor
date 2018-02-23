@@ -32,16 +32,28 @@ class DefineTarget(object):
             wk_avg2 = self.data.iloc[i+1:i+11].ohlc.mean()
             wk_avg_vol = self.data.iloc[i-1:i+11].dollar_volume.mean()
 
-            a1 = wk_avg1 > ohlc * 2
-            a2 = wk_avg2 > ohlc * 1.5
-            a3 = ohlc != 0.0
-            a4 = wk_avg2 > 0.00015
-            a5 = i > 60
-            a6 = wk_avg_vol > 500
-            buy = all([a1,a2,a3,a4,a5,a6])
+            final_score = 1
 
-            if buy :
-                target.append(1)
+            # Factors
+            if all([ohlc!=0.0,i>60,wk_avg2>0.00015,wk_avg_vol>500]):
+
+                wk_1_score = 5
+                wk_2_score = 3
+
+                if wk_avg1 > ohlc * wk_1_score:
+                    score_1 = 1
+                elif wk_avg1 < ohlc:
+                    score_1 = 0
+                else:
+                    score_1 = (wk_avg1-ohlc)/(ohlc*(wk_1_score-1))
+
+                if wk_avg2 > ohlc * wk_2_score:
+                    score_2 = 1
+                elif wk_avg2 < ohlc:
+                    score_2 = 0
+                else:
+                    score_2 = (wk_avg2-ohlc)/(ohlc*(wk_2_score-1))
+                target.append((score_1+score_2)/2)
             else:
                 target.append(0)
 

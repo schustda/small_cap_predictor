@@ -27,6 +27,14 @@ class TrainingData(GeneralFunctions):
         if self.predict:
             self.feature_length -= 1
 
+
+    def _ticker_symbol_dict(self):
+        df = self.load_file('ticker_symbols')
+        reverse_stock_ids = df.symbol.to_dict()
+        self.stock_ids = {}
+        for a,b in reverse_stock_ids.items():
+            self.stock_ids[b] = a
+
     def _incompatible_points(self, data):
         print('Getting incomplete points...')
         bad_points = set()
@@ -95,6 +103,12 @@ class TrainingData(GeneralFunctions):
         #vol_significance_factor
         data_point[self.r*2+1] = data[data.dollar_volume < vol.mean()].shape[0]/data.shape[0]
 
+        # add in date
+        data_point[-2] = data.loc[index,'date'].replace('-','')
+
+        # add in stock symbol
+        data_point[-1] = self.stock_ids[data.loc[index,'symbol']]
+
         #if trying to make a prediction, there should not be a target
         #if trying to generate training data, target should be included
         if not self.predict:
@@ -103,8 +117,10 @@ class TrainingData(GeneralFunctions):
         return data_point
 
     def generate_training_data(self):
+        self._ticker_symbol_dict()
         self.r = int(self.num_days/self.days_avg)
-        self.feature_length = int(self.r * 2 + 3)
+        # self.feature_length = int(self.r * 2 + 3)
+        self.feature_length = int(self.r * 2 + 3) + 2
         print ('num_days: {0}, days_avg: {1}, Method: {2}'.format(self.num_days,self.days_avg,self.method))
         if self.method == 'random_undersampling':
             print ('Percentage : {0}'.format(self.percentage))
@@ -112,7 +128,6 @@ class TrainingData(GeneralFunctions):
             print ('Times to resample : {0}'.format(self.times_to_resample))
         self.interval_time, self.original_time = time(), time()
         data = self.load_file('combined_data')
-        # data = pd.read_csv('data/tables/combined_data.csv')
         points = self._get_points(data)
         print ('{0} training points'.format(len(points)))
         print ('Transforming feature space...')
@@ -138,8 +153,7 @@ if __name__ == '__main__':
 
     # td = CreateTrainingData(num_days = 100, days_avg = 1,method = 'random_oversampling',
     #                         times_to_resample = 20)
-    td = TrainingData(num_days = 260, days_avg = 1, method = 'random_undersampling',
-                percentage = 0.2)
+    td = TrainingData(num_days = 260, days_avg = 2, method = 'all')
     td.generate_training_data()
 
 # FEATURES
