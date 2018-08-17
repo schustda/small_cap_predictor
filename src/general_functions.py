@@ -1,56 +1,115 @@
-import boto3
+import csv
+import json
+import psycopg2
 import pandas as pd
-import matplotlib.pyplot as plt
-from math import ceil
-from time import time, sleep
+from time import time
+from io import StringIO
 from os import environ as e
-from io import StringIO, BytesIO
+from datetime import datetime
 
 class GeneralFunctions(object):
 
-    def __init__(self, local=False):
-        self.s3_url = 'https://s3.amazonaws.com/small-cap-predictor/'
-        self.bucket = 'small-cap-predictor'
-        self.s3_resource = boto3.resource('s3',
-                aws_access_key_id=e['AWS_ACCESS_KEY'],
-                aws_secret_access_key=e['AWS_SECRET_ACCESS_KEY'])
-        self.s3_client = boto3.client('s3',
-                aws_access_key_id=e['AWS_ACCESS_KEY'],
-                aws_secret_access_key=e['AWS_SECRET_ACCESS_KEY'])
-        self.index_col = {'message_board_posts': 0,
-                            'stock_prices': 'Date',
-                            'ticker_symbols': 'key',
-                            'prediction_log':'prediction',
-                            'test':0,
-                            'predictions':0}
+    def __init__(self, local=False,verbose=0,load_model_params=False):
+        super().__init__()
         self.local = local
+        json_file = open('src/connection.json')
+        json_str = json_file.read()
+        self.connection = json.loads(json_str)
+        self.verbose = verbose
+        self.conn = psycopg2.connect(**self.connection)
+        print('Connected!')
+        self.cursor = self.conn.cursor()
+        if load_model_params:
+            self._load_model_parameters()
 
-    def load_file(self,filename):
-        '''
-        Downloads the 'filename' file that is stored on S3 bucket
-        '''
-        if self.local:
-            f = 'data/{0}.csv'.format(filename)
-            index_col = self.index_col.get(filename,None)
-        else:
-            obj = self.s3_client.get_object(Bucket=self.bucket,Key=filename+'.csv')
-            body = obj['Body']
-            csv_string = body.read().decode('utf-8')
-            f = StringIO(csv_string)
-            index_col = self.index_col.get(filename,None)
-        return pd.read_csv(f,index_col=index_col)
+    def _load_model_parameters(self):
+        param_path = 'model/parameters.json'
+        with open(param_path) as f:
+            self.model_params = json.load(f)
 
-    def save_file(self,df,filename):
+
+    def to_table(self,df,table):
+
+        # df = self._reorder_columns(df)
+        cols = df.columns
+        for idx in range(df.shape[0]):
+            df_out = df[idx:idx+1]
+            output = StringIO()
+            df_out.to_csv(output,index=False,header=False,sep='\t')
+            output.seek(0)
+            contents = output.getvalue()
+            try:
+                self.cursor.copy_from(output,table,null="",columns=cols)
+                self.conn.commit()
+            except Exception as e :
+                self.conn.rollback()
+
+    def _format_query(self,query_input,replacements={}):
         '''
-        Saves the file 'f', as 'filename' on the S3 bucket
-        ** csv files only ***
+        Takes in a string or .sql file and optional 'replacements' dictionary.
+
+        Returns a string containing the formatted sql query and replaces the
+        keys in the replacements dictionary with their values.
         '''
-        if self.local:
-            df.to_csv('data/{0}.csv'.format(filename))
+
+        # checks if input is a file or query
+        if query_input.split('.')[-1] == 'sql':
+            # print('Reading .sql File')
+            f = open(query_input,'r')
+            # reading files with a guillemet », add an uncessary Â to the string
+            query = f.read().replace('Â','')
+            f.close()
         else:
-            csv_buffer = StringIO()
-            df.to_csv(csv_buffer)
-            self.s3_resource.Object('small-cap-predictor',filename+'.csv').put(Body=csv_buffer.getvalue())
+            query = query_input
+        if replacements:
+            for key,value in replacements.items():
+                query = query.replace(key,str(value))
+        return query
+
+    def get_value(self,query_input,symbol_id=None,replacements={}):
+        replacements['{symbol_id}'] = symbol_id
+        query_input = 'queries/get_value/{0}.sql'.format(query_input)
+        query = self._format_query(query_input,replacements)
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
+    def get_list(self,query_input,symbol_id=None,replacements={}):
+        replacements['{symbol_id}'] = symbol_id
+        query_input = 'queries/get_list/{0}.sql'.format(query_input)
+        query = self._format_query(query_input,replacements)
+        self.cursor.execute(query)
+        output = self.cursor.fetchall()
+        return [x[0] for x in output]
+
+    def get_dict(self,query_input,symbol_id=None,replacements={}):
+        replacements['{symbol_id}'] = symbol_id
+        query_input = 'queries/get_dict/{0}.sql'.format(query_input)
+        query = self._format_query(query_input,replacements)
+        self.cursor.execute(query)
+        return dict(self.cursor.fetchall())
+
+    def get_df(self,query_input,symbol_id=None,replacements={}):
+        '''
+        Takes in a string containing either a correctly formatted SQL
+        query, or filepath directed to a .sql file. Returns a pandas DataFrame
+        of the executed query.
+        '''
+
+        replacements['{symbol_id}'] = symbol_id
+        query_input = 'queries/get_df/{0}.sql'.format(query_input)
+        query = self._format_query(query_input,replacements)
+        if self.verbose:
+            print ('Executing Query:\n\n',format(query,reindent=True,keyword_case='upper'))
+        return pd.read_sql(query,self.conn)
+
+    def list_tables(self):
+        self.cursor.execute("""SELECT CONCAT(table_schema,'.',table_name) AS tables
+            FROM information_schema.tables
+            WHERE table_schema != 'pg_catalog'
+            AND table_schema != 'information_schema'
+            ORDER BY 1""")
+        for table in self.cursor.fetchall():
+            print(table[0])
 
     def status_update(self,percent):
         '''
@@ -67,15 +126,5 @@ class GeneralFunctions(object):
             print ('|{0}{1}| {2}% - {3} minute(s) remaining'.format(a*'=',b*'-',str(percent),str(min_rem)))
             self.interval_time = time()
 
-    def save_image_to_s3(self,filepath):
-        '''
-        Saves a given image file to the S3 Bucket
-        '''
-
-        filepath = 'images/'+filepath
-        img_data = BytesIO()
-        plt.savefig(img_data, format='png',transparent = True)
-        img_data.seek(0)
-        self.s3_resource.Bucket(self.bucket).put_object(Key=filepath,
-            Body=img_data,ACL='public-read')
-        plt.close('all')
+if __name__ == '__main__':
+    gf = GeneralFunctions()

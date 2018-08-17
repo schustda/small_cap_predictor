@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from src.data.training_data import CreateTrainingData
 
 class ModelSelection(object):
     def __init__(self,model_name,testing_param,param_values,param_dict={},final=False,
@@ -140,7 +139,7 @@ class ModelSelection(object):
 
     def run(self):
         print ('Testing paramaters for {0}'.format(self.testing_param))
-        train = pd.read_csv('data/model/train.csv',header=None)
+        train = pd.read_csv('model/model_development/data/train.csv',header=None)
         X = np.array(train.iloc[:,0:-1])
         y = np.array(train.iloc[:,-1])
         self.X_train,self.X_test,self.y_train,self.y_test = train_test_split(X,y)
@@ -173,7 +172,8 @@ class ModelSelection(object):
         fig, ax = plt.subplots(1, 3, figsize=(12,4), sharex=True)
         # fig.tight_layout(rect=[0, 0.03, 1, 0.95])
         fig.tight_layout(rect=[0, 0.03, 1, .88])
-        fig.suptitle("{0} scores for {1}".format(self.figname,self.model_name),fontsize = 20)
+        # fig.suptitle("{0} scores for {1}".format(self.figname,self.model_name),fontsize = 20)
+        fig.suptitle("{0} scores for {1}".format(ms.figname,ms.model_name),fontsize = 20)
         sns.despine(left=True,bottom=True)
 
         # Plot results
@@ -182,8 +182,9 @@ class ModelSelection(object):
         for score_type,axis in zip(scores,axes):
             print ('plotting {0} charts'.format(score_type))
             self._plot(axis,self.summary,score_type)
-        plt.savefig('images/model_development/model_selection/{0}/{1}.jpg'
+        plt.savefig('model/model_development/model_selection/{0}/{1}.jpg'
             .format(self.model_name,self.figname))
+
 
 
 
@@ -236,20 +237,20 @@ if __name__ == '__main__':
                     # 'booster':['gblinear'],
                     # 'max_depth':[0,1,2,5,10,15,20,25,35,50,100],
                     # 'eta':[1,.85,.7,.55,.4,.25,.1,0],
-                    # 'gamma':[0,1,2,5,10,25,50,100],
+                    'gamma':[0,1,2,5,10,25,50,100],
                     # 'objective':['binary:logistic','binary:logitraw'],
                     # 'booster':['gbtree','gblinear','dart'],
                     # 'tree_method':['auto','exact','approx'],
                     # 'process_type': ['default','update'],
-                    # 'grow_policy':['depthwise','lossguide']
-                    'threshold':[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
+                    # 'grow_policy':['depthwise','lossguide'],
+                    # 'threshold':[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
                 }
     xgb_dict = {
-    'max_depth':50,
+    'max_depth':10,
     'silent':1,
     'eta':0.4,
-    'gamma':0,
-    'objective':'binary:logistic'
+    # 'gamma':0,
+    # 'objective':'binary:logistic'
     # 'booster':'gblinear'
     }
 

@@ -28,12 +28,9 @@ class DataSelection(TrainingData):
         self.svc = self._emptydf('SVC')
         self.days_avg = 1
 
-
-
-
         #Deduced from previous trials
-        self.percentage = 0.2
-        self.method = 'random_undersampling'
+        # self.percentage = 0.2
+        # self.method = 'random_undersampling'
         # self.num_days = 1200
         # self.days_avg = 12
 
