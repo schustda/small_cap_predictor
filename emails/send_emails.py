@@ -13,7 +13,7 @@ class Email(GeneralFunctions):
         super().__init__()
         self.email_address = 'smallcappredictor@gmail.com'
         self.email_password = e['email_password']
-        self.distribution_list = self.load_file('distribution_list').email_address.tolist()
+        # self.distribution_list = self.load_file('distribution_list').email_address.tolist()
         self.msg_type = {'update_symbol':'plain','error':'plain','prediction':'html'}
 
     def _load_html(self,buy):
@@ -36,15 +36,18 @@ class Email(GeneralFunctions):
         if topic == 'update_symbol':
             subject = "Symbol updated"
             body = 'Ticker symbol {0} changed to {1}'.format(content[0],content[1])
-            to_lst = [self.distribution_list[0]]
+            # to_lst = [self.distribution_list[0]]
+            to_lst = ['douglas.schuster303@gmail.com']
         elif topic == 'prediction':
             subject = "Daily Small Cap Predictor Summary for {0}".format(str(datetime.today().date()))
             body = self._load_html(", ".join(content).upper())
-            to_lst = self.distribution_list
+            # to_lst = [self.distribution_list]
+            to_lst = ['douglas.schuster303@gmail.com']
         elif topic == 'error':
             subject = 'ERROR ALERT'
             body = content
-            to_lst = [self.distribution_list[0]]
+            # to_lst = [self.distribution_list[0]]
+            to_lst = ['douglas.schuster303@gmail.com']
 
         return subject, body, to_lst
 
@@ -86,3 +89,8 @@ class Email(GeneralFunctions):
             text = msg.as_string()
             server.sendmail(self.email_address, to_email, text)
             server.quit()
+
+
+if __name__ == '__main__':
+    e = Email()
+    e.send_email('update_symbol',['asdf','asdf2'])
