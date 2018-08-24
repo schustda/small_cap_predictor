@@ -16,17 +16,16 @@ class GeneralFunctions(object):
         json_str = json_file.read()
         self.connection = json.loads(json_str)
         self.verbose = verbose
-        self.conn = psycopg2.connect(**self.connection)
-        print('Connected!')
+        self.connect_to_db(self.connection)
         self.cursor = self.conn.cursor()
-        if load_model_params:
-            self._load_model_parameters()
 
-    def _load_model_parameters(self):
-        param_path = 'model/parameters.json'
-        with open(param_path) as f:
-            self.model_params = json.load(f)
-
+    def connect_to_db(self,connection):
+        try:
+            self.conn = psycopg2.connect(**connection)
+            if self.verbose:
+                print('Connected!')
+        except Exception as e:
+            print('Not Connected')
 
     def to_table(self,df,table):
 
@@ -43,6 +42,18 @@ class GeneralFunctions(object):
                 self.conn.commit()
             except Exception as e :
                 self.conn.rollback()
+
+    def execute_query(self,query):
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+            if self.verbose:
+                print('Success')
+        except Exception as e :
+            if self.verbose:
+                print(e)
+            self.conn.rollback()
+
 
     def _format_query(self,query_input,replacements={}):
         '''
@@ -98,8 +109,8 @@ class GeneralFunctions(object):
         replacements['{symbol_id}'] = symbol_id
         query_input = 'queries/get_df/{0}.sql'.format(query_input)
         query = self._format_query(query_input,replacements)
-        if self.verbose:
-            print ('Executing Query:\n\n',format(query,reindent=True,keyword_case='upper'))
+        # if self.verbose:
+        #     print ('Executing Query:\n\n',format(query,reindent=True,keyword_case='upper'))
         return pd.read_sql(query,self.conn)
 
     def list_tables(self):
