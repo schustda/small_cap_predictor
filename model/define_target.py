@@ -1,12 +1,12 @@
 import pandas as pd
 from sys import argv
-from src.general_functions import GeneralFunctions
+from model.model_base_class import ModelBaseClass
 
 
-class DefineTarget(GeneralFunctions):
+class DefineTarget(ModelBaseClass):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self,verbose=False):
+        super().__init__(verbose=verbose)
 
     def add_target(self,symbol_id):
         '''
