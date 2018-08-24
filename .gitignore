@@ -121,7 +121,7 @@ venv.bak/
 
 # local files
 local/
-test/
+test_files/
 src/connection.json
 s3/
 local_data/
