@@ -138,4 +138,4 @@ class GeneralFunctions(object):
             self.interval_time = time()
 
 if __name__ == '__main__':
-    gf = GeneralFunctions()
+    gf = GeneralFunctions(verbose=1)
