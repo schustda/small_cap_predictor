@@ -17,11 +17,11 @@ class GeneralFunctions(object):
         self.connection = json.loads(json_str)
         self.verbose = verbose
         self.connect_to_db(self.connection)
-        self.cursor = self.conn.cursor()
 
     def connect_to_db(self,connection):
         try:
             self.conn = psycopg2.connect(**connection)
+            self.cursor = self.conn.cursor()
             if self.verbose:
                 print('Connected!')
         except Exception as e:
