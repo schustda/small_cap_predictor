@@ -24,3 +24,5 @@ if __name__ == '__main__':
 
     model.fit(x_train, y_train, epochs=5, verbose=1)
     model.evaluate(x_test, y_test)
+
+    
