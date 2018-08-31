@@ -25,7 +25,7 @@ class GeneralFunctions(object):
             if self.verbose:
                 print('Connected!')
         except Exception as e:
-            print('Not Connected')
+            print('Not Connected, error: {0}'.format(e))
 
     def to_table(self,df,table):
 
