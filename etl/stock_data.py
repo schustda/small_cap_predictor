@@ -1,9 +1,10 @@
 import pandas as pd
 import datetime as dt
 from src.general_functions import GeneralFunctions
-from emails.send_emails import Email
+# from emails.send_emails import Email
 
-class StockData(Email,GeneralFunctions):
+# class StockData(Email,GeneralFunctions):
+class StockData(GeneralFunctions):
 
     def __init__(self):
         super().__init__()
@@ -25,7 +26,7 @@ class StockData(Email,GeneralFunctions):
         '''
 
         # Convert index to datetime
-        df.index = pd.to_datetime(df.index)
+        df.index = pd.to_datetime(df.date)
 
         # Start is the first day that stock price is recorded
         start = df.index[0]
@@ -43,16 +44,18 @@ class StockData(Email,GeneralFunctions):
         df = df.reindex(all_days)
         df.index.name = 'Date'
         df.fillna({'Volume': 0},inplace=True)
-        return df.fillna(method = 'ffill')
+        df = df.fillna(method = 'ffill')
+        df.date = df.index
+        return df
 
     def pull_data(self,symbol):
 
         url = self.fid_url + symbol.upper()
-        try:
-            df = pd.read_csv(url,index_col = 'Date').iloc[:-18]
-        except Exception as e:
-            self.send_email('error','Problem with {0}'.format(symbol))
-            print ('Error for {0}'.format(symbol))
+        # try:
+        df = pd.read_csv(url,index_col = 'Date').iloc[:-18]
+        # except Exception as e:
+        #     self.send_email('error','Problem with {0}'.format(symbol))
+        #     print ('Error for {0}'.format(symbol))
         df['Date'] = df.index
         df = df.reset_index(drop=True)
         df.columns = map(lambda x: x.lower(), df.columns)
@@ -65,6 +68,7 @@ class StockData(Email,GeneralFunctions):
         df = self.pull_data(symbol)
         df['symbol_id'] = symbol_id
         df['date'] = pd.to_datetime(df.date)
+        df = self._add_zero_days(df)
         dates_already_added = set(self.get_list('price_history_dates',symbol_id=symbol_id))
         if dates_already_added:
             df = df[~df.date.isin(set(dates_already_added))]
