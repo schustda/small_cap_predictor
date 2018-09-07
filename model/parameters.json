@@ -1,4 +1,5 @@
 {
     "num_days" : 60,
-    "buffer_days" : 60
+    "buffer_days" : 60,
+    "zero_target_percentage": 0.25
 }
