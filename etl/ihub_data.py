@@ -219,9 +219,10 @@ class IhubData(Email, GeneralFunctions):
 if __name__ == '__main__':
     data = IhubData(verbose = 1,delay=True)
     symbol_ids = data.get_list('symbol_ids')
-    grp1 = [x for x in symbol_ids if not x%4]
-    grp2 = [x for x in symbol_ids if not (x+1)%4]
-    grp3 = [x for x in symbol_ids if not (x+2)%4]
-    grp4 = [x for x in symbol_ids if not (x+3)%4]
-    for symbol_id in eval(argv[1]):
+    # grp1 = [x for x in symbol_ids if not x%4]
+    # grp2 = [x for x in symbol_ids if not (x+1)%4]
+    # grp3 = [x for x in symbol_ids if not (x+2)%4]
+    # grp4 = [x for x in symbol_ids if not (x+3)%4]
+    for symbol_id in symbol_ids:
+    # for symbol_id in eval(argv[1]):
         df = data.update_posts(symbol_id)
