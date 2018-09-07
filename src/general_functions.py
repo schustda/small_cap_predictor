@@ -41,7 +41,7 @@ class GeneralFunctions(object):
                 self.cursor.copy_from(output,table,null="",columns=cols)
                 self.conn.commit()
             except Exception as e :
-                print (e)
+                # print (e)
                 self.conn.rollback()
 
     def execute_query(self,query):
