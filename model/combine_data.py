@@ -33,11 +33,12 @@ if __name__ == '__main__':
     cd = CombineData()
     # df = cd.compile_data(2)
     symbol_ids = cd.get_list('symbol_ids')
-    grp1 = [x for x in symbol_ids if not x%4]
-    grp2 = [x for x in symbol_ids if not (x+1)%4]
-    grp3 = [x for x in symbol_ids if not (x+2)%4]
-    grp4 = [x for x in symbol_ids if not (x+3)%4]
-    for symbol_id in eval(argv[1]):
+    # grp1 = [x for x in symbol_ids if not x%4]
+    # grp2 = [x for x in symbol_ids if not (x+1)%4]
+    # grp3 = [x for x in symbol_ids if not (x+2)%4]
+    # grp4 = [x for x in symbol_ids if not (x+3)%4]
+    # for symbol_id in eval(argv[1]):
+    for symbol_id in symbol_ids:
         print(symbol_id)
         df = cd.compile_data(symbol_id)
 
