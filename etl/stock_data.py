@@ -72,11 +72,14 @@ class StockData(GeneralFunctions):
         dates_already_added = set(self.get_list('price_history_dates',symbol_id=symbol_id))
         if dates_already_added:
             df = df[~df.date.isin(set(dates_already_added))]
+        df.symbol_id = df.symbol_id.astype(int)
+        df.volume = df.volume.astype(int)
         print('Adding {0} day(s) of price history for {1} ({2})'.format(df.shape[0],symbol,symbol_id))
         self.to_table(df,'market.price_history')
 
 if __name__ == '__main__':
     sd = StockData()
     symbol_ids = sd.get_list('symbol_ids')
+    # symbol_ids.reverse()
     for symbol_id in symbol_ids:
         sd.update_stock_data(symbol_id)
