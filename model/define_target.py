@@ -1,5 +1,6 @@
 import pandas as pd
 from sys import argv
+import numpy as np
 from model.model_base_class import ModelBaseClass
 
 
@@ -8,7 +9,7 @@ class DefineTarget(ModelBaseClass):
     def __init__(self,verbose=False):
         super().__init__(verbose=verbose)
 
-    def add_target(self,symbol_id):
+    def add_target(self,symbol_id,reset=False):
         '''
         Define target given a data point. Current critera are as follows:
             * Average price for the following market week is double what the
@@ -29,6 +30,9 @@ class DefineTarget(ModelBaseClass):
 
         print('generating target...')
         for i in range(data.shape[0]-11):
+            if not reset:
+                if not np.isnan(data.iloc[i].defined_target):
+                    continue
             idx = data.iloc[i].idx
             ohlc_average = data.iloc[i].ohlc_average
             wk_avg1 = data.iloc[i+1:i+6].ohlc_average.mean()
@@ -69,6 +73,8 @@ WHERE idx = {2};
 
 if __name__ == '__main__':
     dt = DefineTarget()
+    # dt.add_target(89)
+
     symbol_ids = dt.get_list('symbol_ids')
     grp1 = [x for x in symbol_ids if not x%4]
     grp2 = [x for x in symbol_ids if not (x+1)%4]
