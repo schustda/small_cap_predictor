@@ -122,8 +122,11 @@ venv.bak/
 # local files
 local/
 test_files/
-src/connection.json
 s3/
 local_data/
+
+# credentials
+src/connection.json
+email/email_passwort.txt
 
 # End of https://www.gitignore.io/api/linux,python
