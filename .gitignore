@@ -127,6 +127,6 @@ local_data/
 
 # credentials
 src/connection.json
-email/email_password.txt
+emails/email_password.txt
 
 # End of https://www.gitignore.io/api/linux,python
