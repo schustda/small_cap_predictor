@@ -41,6 +41,7 @@ class GeneralFunctions(object):
                 self.cursor.copy_from(output,table,null="",columns=cols)
                 self.conn.commit()
             except Exception as e :
+                print (e)
                 self.conn.rollback()
 
     def execute_query(self,query):
@@ -107,7 +108,9 @@ class GeneralFunctions(object):
         '''
 
         replacements['{symbol_id}'] = symbol_id
-        query_input = 'queries/get_df/{0}.sql'.format(query_input)
+        if query_input in ['combined_data','get_combined_data','get_point',
+            'model_data','model_point']:
+            query_input = 'queries/get_df/{0}.sql'.format(query_input)
         query = self._format_query(query_input,replacements)
         # if self.verbose:
         #     print ('Executing Query:\n\n',format(query,reindent=True,keyword_case='upper'))
