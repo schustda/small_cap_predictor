@@ -12,7 +12,9 @@ class Email(GeneralFunctions):
     def __init__(self):
         super().__init__()
         self.email_address = 'smallcappredictor@gmail.com'
-        self.email_password = e['email_password']
+        with open('emails/email_password.txt') as f:
+            self.email_password = f.read().strip()
+        # self.email_password = e['email_password']
         # self.distribution_list = self.load_file('distribution_list').email_address.tolist()
         self.msg_type = {'update_symbol':'plain','error':'plain','prediction':'html'}
 
