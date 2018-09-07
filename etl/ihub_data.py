@@ -217,7 +217,7 @@ class IhubData(Email, GeneralFunctions):
 
 
 if __name__ == '__main__':
-    data = IhubData(verbose = 1,delay=True)
+    data = IhubData(verbose = 1,delay=False)
     symbol_ids = data.get_list('symbol_ids')
     # grp1 = [x for x in symbol_ids if not x%4]
     # grp2 = [x for x in symbol_ids if not (x+1)%4]
