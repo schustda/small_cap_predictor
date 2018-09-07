@@ -27,6 +27,7 @@ class CombineData(Email,GeneralFunctions):
         self._update_previous_point(symbol_id)
         query_file = 'combined_data'
         df = self.get_df(query_file,symbol_id=symbol_id)
+        print("Adding {0} combined point(s) for symbol_id: {1}".format(df.shape[0],symbol_id))
         self.to_table(df, 'model.combined_data')
 
 if __name__ == '__main__':
