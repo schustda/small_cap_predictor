@@ -138,7 +138,7 @@ class GeneralFunctions(object):
             if percent == 0:
                 percent = 0.5
             min_rem = int(time_elapsed/percent*(100-percent)/60)
-            print ('|{0}{1}| {2}% - {3} minute(s) remaining {4}/{5}'.format(a*'=',b*'-',str(percent),str(min_rem)),num,total)
+            print ('|{0}{1}| {2}% - {3} minute(s) remaining {4}/{5}'.format(a*'=',b*'-',str(percent),str(min_rem),num,total))
             self.interval_time = time()
 
 if __name__ == '__main__':
