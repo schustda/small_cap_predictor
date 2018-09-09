@@ -208,10 +208,9 @@ class IhubData(Email, GeneralFunctions):
             self.to_table(page_df,'ihub.message_board')
             posts_to_add -= set(page_df.post_number)
             if self.verbose:
-                # print(post_number)
-                percent = int((total_posts_to_add-len(posts_to_add))/total_posts_to_add*100)
-                # print ('{0}/{1}'.format((total_posts_to_add-len(posts_to_add)),total_posts_to_add))
-                self.status_update(percent)
+                num = (total_posts_to_add-len(posts_to_add))
+                total = total_posts_to_add
+                self.status_update(num,total)
             if self.delay:
                 sleep(randint(2,15))
 

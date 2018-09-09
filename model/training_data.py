@@ -61,12 +61,10 @@ class TrainingData(ModelBaseClass):
             print('reseting {0}'.format(column))
             self.reset_split(column,symbol_id=symbol_id)
             print('adding splits for {0}'.format(column))
-
+            total = len(idxs)
             for num,idx in enumerate(idxs):
-                print ('{0} / {1}'.format(num,len(idxs)))
                 self.set_split(column,idx)
-                percent = int(num/len(idxs))*100
-                self.status_update(percent)
+                self.status_update(num,total)
 
     def working_split(self,symbol_id):
         '''

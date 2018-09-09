@@ -125,10 +125,11 @@ class GeneralFunctions(object):
         for table in self.cursor.fetchall():
             print(table[0])
 
-    def status_update(self,percent):
+    def status_update(self,num,total):
         '''
         Provides an update every minute on the progress of a given function
         '''
+        percent = round(num / total * 100,2)
         # Display update ever 60 seconds
         if time() > self.interval_time + 60:
             time_elapsed = time() - self.original_time
@@ -137,7 +138,7 @@ class GeneralFunctions(object):
             if percent == 0:
                 percent = 0.5
             min_rem = int(time_elapsed/percent*(100-percent)/60)
-            print ('|{0}{1}| {2}% - {3} minute(s) remaining'.format(a*'=',b*'-',str(percent),str(min_rem)))
+            print ('|{0}{1}| {2}% - {3} minute(s) remaining {4}/{5}'.format(a*'=',b*'-',str(percent),str(min_rem)),num,total)
             self.interval_time = time()
 
 if __name__ == '__main__':
