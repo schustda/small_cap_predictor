@@ -72,13 +72,6 @@ class TrainingData(ModelBaseClass):
         # stock has been on the market
         df = df[self.model_params['buffer_days']:].dropna(subset=['defined_target'])
 
-        # there is a high number of points that have
-        zeroes = df[df.defined_target == 0]
-        zeroes_idx = set(zeroes.idx)
-        idxs_to_remove = sample(zeroes_idx,int(len(zeroes_idx) * (1-self.model_params['zero_target_percentage'])))
-        mask = df.idx.map(lambda x: x not in idxs_to_remove)
-        df = df[mask]
-
         train,validation = train_test_split(df.idx.tolist())
 
         self.insert_splits({'working_train':train,
@@ -120,23 +113,22 @@ if __name__ == '__main__':
 
 
     td = TrainingData(verbose=True)
-    df = td.working_split(1)
     # df = td.create_training_data('model_development_train')
     # df = td.create_training_data('model_development_test')
     # td.working_train_validation()
     # df = td.pull_and_transform_point(1689)
 
 
-    # symbol_ids = td.get_list('symbol_ids')
-    # grp1 = [x for x in symbol_ids if not x%4]
-    # grp2 = [x for x in symbol_ids if not (x+1)%4]
-    # grp3 = [x for x in symbol_ids if not (x+2)%4]
-    # grp4 = [x for x in symbol_ids if not (x+3)%4]
-    # for symbol_id in eval(argv[1]):
+    symbol_ids = td.get_list('symbol_ids')
+    grp1 = [x for x in symbol_ids if not x%4]
+    grp2 = [x for x in symbol_ids if not (x+1)%4]
+    grp3 = [x for x in symbol_ids if not (x+2)%4]
+    grp4 = [x for x in symbol_ids if not (x+3)%4]
+    for symbol_id in eval(argv[1]):
     # for symbol_id in symbol_ids:
-    #     print(symbol_id)
-    #     td.working_train_validation(symbol_id,reset=True)
-    # td.generate_training_data()
+        print(symbol_id)
+        td.working_train_validation(symbol_id,reset=True)
+    td.generate_training_data()
 
 
 
