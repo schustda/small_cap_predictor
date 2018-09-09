@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sys import argv
 from time import time
-from random import sample,choices
+from random import sample
 from sklearn.preprocessing import Normalizer
 from sklearn.model_selection import train_test_split
 from model.model_base_class import ModelBaseClass
