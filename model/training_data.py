@@ -63,8 +63,8 @@ class TrainingData(ModelBaseClass):
             print('adding splits for {0}'.format(column))
 
             for num,idx in enumerate(idxs):
+                print ('{0} / {1}'.format(num,len(idxs)))
                 self.set_split(column,idx)
-
                 percent = int(num/len(idxs))*100
                 self.status_update(percent)
 
