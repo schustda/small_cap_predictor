@@ -32,7 +32,9 @@ class ModelBaseClass(GeneralFunctions):
         train = self.get_df('model_data',replacements={'{table}':'model_development_train'})
         self.X_train = train.drop(['idx','target'],axis=1).values
         self.y_train = train['target'].values
+        self.train_idx = train['idx'].values
 
         test = self.get_df('model_data',replacements={'{table}':'model_development_test'})
         self.X_test = test.drop(['idx','target'],axis=1).values
         self.y_test = test['target'].values
+        self.test_idx = test['idx'].values
