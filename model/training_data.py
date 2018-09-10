@@ -66,9 +66,9 @@ class TrainingData(ModelBaseClass):
             total = len(idxs)
             chunks = np.array_split(np.array(idxs),chunksize)
 
-            for chunk in chunks:
+            for num,chunk in enumerate(chunks):
                 self.set_split(column,chunk)
-                self.status_update(chunk[0],total)
+                self.status_update(num*chunksize,total)
 
     def working_split(self,symbol_id):
         '''
@@ -106,15 +106,20 @@ class TrainingData(ModelBaseClass):
 
         idxs = self.get_idxs(column)
         first = True
+        num_days = self.model_params['num_days']
+        total = len(idxs)
 
-        for idx in idxs:
-            replacements = {'{idx}':idx,'{num_days}':self.model_params['num_days']}
+        self.interval_time, self.original_time = time(), time()
+        for num,idx in enumerate(idxs):
+            replacements = {'{idx}':idx,'{num_days}':num_days}
             df = self.get_df('model_point',replacements=replacements)
             df = df.sort_values('date')
 
             data_point = self.transform(df)
             data_point['idx'] = df.idx
             data_point['target'] = df.defined_target
+
+            self.status_update(num,total)
 
             if first:
                 self._drop_and_recreate_table(data_point,column)
@@ -126,9 +131,9 @@ if __name__ == '__main__':
 
 
     td = TrainingData(verbose=True)
-    td.model_development_split()
-    # df = td.create_training_data('model_development_train')
-    # df = td.create_training_data('model_development_test')
+    # td.model_development_split()
+    td.create_training_data('model_development_train')
+    td.create_training_data('model_development_test')
     # td.working_train_validation()
     # df = td.pull_and_transform_point(1689)
 
