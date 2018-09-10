@@ -41,19 +41,21 @@ class TrainingData(ModelBaseClass):
         except:
             self.conn.rollback()
 
-    def set_split(self,column,idx):
+    def set_split(self,column,chunk):
+
+        idx_lst = ', '.join(str(num) for num in chunk)
         insert_query = '''
         UPDATE model.combined_data
         SET {0} = TRUE, modified_date = '{1}'
-        WHERE idx = {2}
-        '''.format(column,pd.Timestamp.now(),idx)
+        WHERE idx IN ({2})
+        '''.format(column,pd.Timestamp.now(),idx_lst)
         try:
             self.cursor.execute(insert_query)
             self.conn.commit()
         except:
             self.conn.rollback()
 
-    def insert_splits(self,splits,symbol_id=None):
+    def insert_splits(self,splits,symbol_id=None,chunksize=1000):
 
         self.interval_time, self.original_time = time(), time()
 
@@ -62,9 +64,11 @@ class TrainingData(ModelBaseClass):
             self.reset_split(column,symbol_id=symbol_id)
             print('adding splits for {0}'.format(column))
             total = len(idxs)
-            for num,idx in enumerate(idxs):
-                self.set_split(column,idx)
-                self.status_update(num,total)
+            chunks = np.array_split(np.array(idxs),chunksize)
+
+            for chunk in chunks:
+                self.set_split(column,chunk)
+                self.status_update(chunk[0],total)
 
     def working_split(self,symbol_id):
         '''
