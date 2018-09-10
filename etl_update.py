@@ -6,7 +6,7 @@ from model.define_target import DefineTarget
 
 if __name__ == '__main__':
 
-    ihub = IhubData(verbose = 1,delay=False)
+    ihub = IhubData(verbose = 1,delay=True)
     symbol_ids = ihub.get_list('symbol_ids')
 
     for symbol_id in symbol_ids:
@@ -21,9 +21,10 @@ if __name__ == '__main__':
     cd = CombineData()
     for symbol_id in symbol_ids:
         cd.compile_data(symbol_id)
-    del sd
+    del cd
 
     dt = DefineTarget()
     for symbol_id in symbol_ids:
+        print (symbol_id)
         dt.add_target(symbol_id)
-    del sd
+    del dt
