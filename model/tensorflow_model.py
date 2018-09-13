@@ -5,7 +5,7 @@ from time import time
 
 def add_predictions(model):
 
-    mbc = ModelBaseClass()
+    mbc = ModelBaseClass(verbose=1)
     idxs = mbc.get_list('idxs_to_predict')
     num_days = mbc.model_params['num_days']
     mbc.interval_time, mbc.original_time = time(), time()
