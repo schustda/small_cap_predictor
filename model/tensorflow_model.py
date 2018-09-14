@@ -16,7 +16,7 @@ def add_predictions(model):
         df = mbc.get_df('model_point',replacements=replacements)
         df = df.sort_values('date')
         data_point = mbc.transform(df)
-        pred = model.predict
+        pred = model.predict(data_point)[0][0]
 
         update_query = '''
         UPDATE model.combined_data
@@ -35,9 +35,6 @@ if __name__ == '__main__':
     x_train = mbc.X_train
     y_train = mbc.y_train
     train_idx = mbc.train_idx
-    y_test = mbc.y_test
-    x_test = mbc.X_test
-    test_idx = mbc.test_idx
 
     # there is a high number of points that have
     zeroes = set([num for num,value in enumerate(y_train) if value==0])
@@ -59,6 +56,10 @@ if __name__ == '__main__':
                   loss='mean_squared_error',
                   metrics=['accuracy'])
     model.fit(x_train, y_train, epochs=10, verbose=1)
+
+    y_test = mbc.y_test
+    x_test = mbc.X_test
+    test_idx = mbc.test_idx
     model.evaluate(x_test, y_test)
     model.save('model/scp_model.h5')
 
