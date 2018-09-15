@@ -48,8 +48,8 @@ class GeneralFunctions(object):
         try:
             self.cursor.execute(query)
             self.conn.commit()
-            # if self.verbose:
-            #     print('Success')
+            if self.verbose:
+                print(query)
         except Exception as e :
             if self.verbose:
                 print(e)
