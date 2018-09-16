@@ -77,4 +77,4 @@ if __name__ == '__main__':
     model.evaluate(x_test, y_test)
     model.save('model/scp_model.h5')
 
-    # add_predictions(model)
+    add_predictions(model)
