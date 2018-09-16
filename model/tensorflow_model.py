@@ -44,7 +44,7 @@ class TFModel(ModelBaseClass):
 
         model.compile(loss='mse',
                     optimizer=optimizer,
-                    metrics=['mae'])
+                    metrics=['accuracy'])
         return model
 
 if __name__ == '__main__':
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     model_path = 'model/scp_model.h5'
     # model = tf.keras.models.load_model(model_path)
     model = tfm.build_model(x_train)
-    model.fit(x_train, y_train, epochs=2, verbose=1)
+    model.fit(x_train, y_train, epochs=10, verbose=1)
 
     y_test = tfm.y_test
     x_test = tfm.X_test
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     model.evaluate(x_test, y_test)
     model.save('model/scp_model.h5')
 
-    add_predictions(model)
+    tfm.add_predictions(model)
