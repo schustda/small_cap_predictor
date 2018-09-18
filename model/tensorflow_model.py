@@ -3,11 +3,15 @@ import tensorflow as tf
 from random import sample
 from model.model_base_class import ModelBaseClass
 from time import time
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class TFModel(ModelBaseClass):
-    def __init__(self):
+    def __init__(self,load_data=True):
         super().__init__(verbose=1)
+        if load_data:
+            self.load_train_test()
 
     def add_predictions(self,model):
 
@@ -22,7 +26,7 @@ class TFModel(ModelBaseClass):
             df = mbc.get_df('model_point',replacements=replacements)
             df = df.sort_values('date')
             data_point = mbc.transform(df)
-            pred = model.predict_proba(data_point)[0][0]
+            pred = model.predict_proba(data_point)[0][0]**(1/2)
 
             update_query = '''
             UPDATE model.combined_data
@@ -31,6 +35,22 @@ class TFModel(ModelBaseClass):
             '''.format(pred,idx)
             mbc.execute_query(update_query)
             mbc.status_update(num,total)
+
+    def random_undersampling(self,x,y):
+        # there is a high number of points that have
+        zero_percentage = self.model_params['zero_target_percentage']
+        less_than_5_percentage = self.model_params['less_than_5_percentage']
+
+        zeroes = set([num for num,value in enumerate(y) if value==0])
+        idxs_to_remove = set(sample(zeroes,int(len(zeroes)*(1-zero_percentage))))
+
+        zero_to_five = set([num for num,value in enumerate(y) if (value > 0 and value < 0.05)])
+        idxs_to_remove = idxs_to_remove.union(set(sample(zero_to_five,int(len(zero_to_five)*(1-less_than_5_percentage)))))
+
+        mask = [num not in idxs_to_remove for num in range(len(y))]
+
+        return x[mask], y[mask]
+
 
     def build_model(self,train_data):
         model = keras.Sequential([
@@ -47,34 +67,34 @@ class TFModel(ModelBaseClass):
                     metrics=['accuracy'])
         return model
 
+def plot_target_hist(data):
+    pd.DataFrame(data).hist()
+    plt.show()
+
 if __name__ == '__main__':
 
     tfm = TFModel()
-    tfm.load_train_test()
-
     x_train = tfm.X_train
     y_train = tfm.y_train
     train_idx = tfm.train_idx
 
-    # there is a high number of points that have
-    zeroes = set([num for num,value in enumerate(y_train) if value<0.05])
-    idxs_to_remove = set(sample(zeroes,int(len(zeroes)*(1-tfm.model_params['zero_target_percentage']))))
-    mask = [num not in idxs_to_remove for num in range(len(y_train))]
-    x_train = x_train[mask]
-    y_train = y_train[mask]
-
+    # x_resampled,y_resampled = tfm.random_undersampling(x_train,y_train)
     print("Training set: {}".format(x_train.shape))  # 404 examples, 13 features
-    # print("Testing set:  {}".format(x_test.shape))   # 102 examples, 13 features
 
-    model_path = 'model/scp_model.h5'
-    # model = tf.keras.models.load_model(model_path)
+    # plot_target_hist(y_resampled)
+    # plot_target_hist(y_train)
+
+    # model_path = 'model/scp_model.h5'
+    # # model = tf.keras.models.load_model(model_path)
     model = tfm.build_model(x_train)
-    model.fit(x_train, y_train, epochs=10, verbose=1)
-
+    y_train = y_train**2
+    model.fit(x_train, y_train, epochs=20, verbose=1)
+    #
     y_test = tfm.y_test
     x_test = tfm.X_test
     test_idx = tfm.test_idx
-    model.evaluate(x_test, y_test)
+    print('loss --- acc')
+    print(model.evaluate(x_test, y_test**2))
     model.save('model/scp_model.h5')
 
     tfm.add_predictions(model)
