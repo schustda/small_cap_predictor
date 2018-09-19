@@ -9,8 +9,10 @@ FROM (
     SELECT *
     FROM market.price_history
     WHERE symbol_id = {symbol_id}
-    AND symbol_id::varchar||date::varchar NOT IN (
-        SELECT symbol_id::varchar||date::varchar FROM model.combined_data)
+    AND date NOT IN (SELECT date
+      FROM model.combined_data
+      WHERE symbol_id = {symbol_id}
+    )
 ) t1
 
 LEFT JOIN (
