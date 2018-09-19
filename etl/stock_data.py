@@ -66,6 +66,9 @@ class StockData(GeneralFunctions):
 
         symbol = self.get_value('symbol',symbol_id=symbol_id)
         df = self.pull_data(symbol)
+        if df.shape[0] == 0:
+            print('No data came through for {0}'.format(symbol))
+            return
         df['symbol_id'] = symbol_id
         df['date'] = pd.to_datetime(df.date)
         df = self._add_zero_days(df)
@@ -81,5 +84,5 @@ if __name__ == '__main__':
     sd = StockData()
     symbol_ids = sd.get_list('symbol_ids')
     # symbol_ids.reverse()
-    for symbol_id in symbol_ids:
-        sd.update_stock_data(symbol_id)
+    for symbol_id in sfymbol_ids:
+        df = sd.update_stock_data(symbol_id)
