@@ -47,6 +47,7 @@ CREATE TABLE model.combined_data (
     dollar_volume float8,
     num_posts int,
     defined_target float4,
+    pred_eligible bool DEFAULT TRUE,
     working_train bool DEFAULT FALSE,
     working_validation bool DEFAULT FALSE,
     model_development_train bool DEFAULT FALSE,
