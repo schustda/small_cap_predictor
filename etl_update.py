@@ -38,4 +38,4 @@ def update_data(section):
 
 
 if __name__ == '__main__':
-    updated_data(argv[1])
+    update_data(argv[1])
