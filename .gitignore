@@ -129,4 +129,7 @@ local_data/
 src/connection.json
 emails/email_password.txt
 
+# visualizations
+tableau/
+
 # End of https://www.gitignore.io/api/linux,python
