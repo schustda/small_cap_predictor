@@ -8,7 +8,7 @@ from sys import argv
 def update_data(section):
     ihub = IhubData(verbose = 1,delay=True)
     symbol_ids = ihub.get_list('symbol_ids')
-    id_groups = []
+    id_groups = {}
     id_groups['grp1'] = [x for x in symbol_ids if not x%4]
     id_groups['grp2'] = [x for x in symbol_ids if not (x+1)%4]
     id_groups['grp3'] = [x for x in symbol_ids if not (x+2)%4]
