@@ -25,7 +25,7 @@ def add_new_symbol(symbol,ihub_code):
     gf.to_table(df,'items.symbol')
     sleep(2)
 
-    symbol_id = gf.get_value('symbol_id',{'{symbol}':symbol})
+    symbol_id = gf.get_value('symbol_id',replacements={'{symbol}':symbol})
     print (symbol_id)
 
     ihub = IhubData(verbose=1,delay=True)
