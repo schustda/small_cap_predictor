@@ -4,6 +4,7 @@ from model.combine_data import CombineData
 from src.general_functions import GeneralFunctions
 from time import sleep
 import pandas as pd
+from sys import argv
 
 
 def add_new_symbol(symbol,ihub_code):
@@ -43,7 +44,8 @@ def add_new_symbol(symbol,ihub_code):
 
 if __name__ == '__main__':
 
-    add_new_symbol('rbiz','RealBiz-Media-Group-Inc-RBIZ-25681')
+    add_new_symbol(argv[1],argv[2])
+    # add_new_symbol('rbiz','RealBiz-Media-Group-Inc-RBIZ-25681')
     #
     # new_stocks = [
     #     ['libe','Liberated-Solutions-Inc-LIBE-26214'],
