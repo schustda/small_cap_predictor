@@ -41,19 +41,15 @@ class TrainingData(ModelBaseClass):
         except:
             self.conn.rollback()
 
-    def set_split(self,column,chunk):
+    def set_split(self,column,chunk,value_to_set='TRUE'):
 
         idx_lst = ', '.join(str(num) for num in chunk)
         insert_query = '''
         UPDATE model.combined_data
-        SET {0} = TRUE, modified_date = '{1}'
-        WHERE idx IN ({2})
-        '''.format(column,pd.Timestamp.now(),idx_lst)
-        try:
-            self.cursor.execute(insert_query)
-            self.conn.commit()
-        except:
-            self.conn.rollback()
+        SET {0} = {1}, modified_date = '{2}'
+        WHERE idx IN ({3})
+        '''.format(column,value_to_set,pd.Timestamp.now(),idx_lst)
+        self.execute_query(insert_query)
 
     def insert_splits(self,splits,symbol_id=None,chunksize=1000):
 
@@ -82,7 +78,11 @@ class TrainingData(ModelBaseClass):
 
         # only include points after a certain number of days that the
         # stock has been on the market
-        df = df[self.model_params['buffer_days']:].dropna(subset=['defined_target'])
+
+        all_idxs = set(df.idx)
+        df = df[self.model_params['num_days']:].dropna(subset=['defined_target'])
+        incomplete_points = all_idxs - set(df.idx)
+        self.set_split('pred_eligible',incomplete_points,value_to_set='FALSE')
 
         train,validation = train_test_split(df.idx.tolist())
         print('inserting')
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
 
     td = TrainingData(verbose=True)
-    # td.model_development_split()
+    td.model_development_split()
     td.create_training_data('model_development_train')
     td.create_training_data('model_development_test')
     # td.working_train_validation()

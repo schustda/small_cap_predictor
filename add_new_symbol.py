@@ -1,6 +1,7 @@
 from etl.ihub_data import IhubData
 from etl.stock_data import StockData
 from model.combine_data import CombineData
+from model.training_data import TrainingData
 from src.general_functions import GeneralFunctions
 from time import sleep
 import pandas as pd
