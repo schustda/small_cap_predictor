@@ -14,6 +14,13 @@ def add_new_symbol(symbol,ihub_code):
         time. The user can specify which stock is added. The only input needed
         is the symbol, and the ihub link to that stock's message board
     '''
+
+    gf = GeneralFunctions()
+    if symbol in set(gf.get_list('symbols')):
+        print('Symbol already added')
+        return
+
+
     df = pd.DataFrame(columns=['symbol','name','ihub_code'])
 
 
@@ -23,7 +30,6 @@ def add_new_symbol(symbol,ihub_code):
 
     name = ' '.join(ihub_code.split('-')[:-2])
     df.loc[0] = [symbol,name,ihub_code]
-    gf = GeneralFunctions()
     gf.to_table(df,'items.symbol')
     sleep(2)
 
