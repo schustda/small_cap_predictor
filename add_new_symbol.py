@@ -45,8 +45,8 @@ def add_new_symbol(symbol,ihub_code):
     cd = CombineData()
     cd.compile_data(symbol_id)
 
-    td = TrainingData(verbose=1)
-    td.working_split(symbol_id)
+    #td = TrainingData(verbose=1)
+    #td.working_split(symbol_id)
 
 
 if __name__ == '__main__':
