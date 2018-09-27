@@ -132,4 +132,7 @@ emails/email_password.txt
 # visualizations
 tableau/
 
+# avoiding putting postgres connection string
+airflow/airflow.cfg
+
 # End of https://www.gitignore.io/api/linux,python
