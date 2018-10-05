@@ -103,6 +103,6 @@ if __name__ == '__main__':
     test_idx = tfm.test_idx
     print('loss --- acc')
     print(model.evaluate(x_test, y_test**2))
-    model.save('model/scp_model.h5')
+    # model.save('model/scp_model.h5')
 
     tfm.add_predictions(model,x_train.shape[1],chunksize=1000)
