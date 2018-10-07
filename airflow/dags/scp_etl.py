@@ -3,8 +3,8 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from etl.ihub_data import IhubData
 from etl.stock_data import StockData
-from model.combined_data import CombineData
-
+from model.combine_data import CombineData
+from datetime import datetime, timedelta
 
 
 ihub = IhubData()
@@ -17,9 +17,23 @@ args = {
     'start_date': airflow.utils.dates.days_ago(2)
 }
 
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2015, 12, 1),
+    'email': ['airflow@example.com'],
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+    'schedule_interval': '@hourly',
+}
+
+
+
 dag = DAG(
     dag_id='scp_etl', default_args=args,
-    schedule_interval=None)
+    schedule_interval="@daily")
 
 for symbol_id,symbol in symbols.items():
     ihub_etl = PythonOperator(
@@ -43,5 +57,5 @@ for symbol_id,symbol in symbols.items():
         dag=dag
     )
 
-    combine_data.set_upstream(stock_etl)
-    combine_data.set_upstream(ihub_etl)
+    stock_etl.set_downstream(combine_data)
+    ihub_etl.set_downstream(combine_data)
