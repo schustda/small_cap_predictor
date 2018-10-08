@@ -129,7 +129,10 @@ class GeneralFunctions(object):
         '''
         Provides an update every minute on the progress of a given function
         '''
-        percent = round(num / total * 100,2)
+        try:
+            percent = round(num / total * 100,2)
+        except:
+            percent = 0
         # Display update ever 60 seconds
         if time() > self.interval_time + 60:
             time_elapsed = time() - self.original_time

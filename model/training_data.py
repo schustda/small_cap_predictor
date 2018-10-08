@@ -74,7 +74,7 @@ class TrainingData(ModelBaseClass):
         symbol into a train test set. Will reset what was previously selected.
         '''
         df = self.get_df('get_combined_data',symbol_id=symbol_id)
-        print('got data')
+        print('Got data for symbol_id: {0}. df shape of {1}'.format(symbol_id,str(df.shape)))
 
         # only include points after a certain number of days that the
         # stock has been on the market
@@ -82,10 +82,10 @@ class TrainingData(ModelBaseClass):
         all_idxs = set(df.idx)
         df = df[self.model_params['num_days']:].dropna(subset=['defined_target'])
         incomplete_points = all_idxs - set(df.idx)
+        print ('Dropping {0} incomplete points'.format(len(incomplete_points)))
         self.set_split('pred_eligible',incomplete_points,value_to_set='FALSE')
 
         train,validation = train_test_split(df.idx.tolist())
-        print('inserting')
         self.insert_splits({'working_train':train,
             'working_validation':validation},symbol_id)
 
