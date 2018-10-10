@@ -26,11 +26,11 @@ class DefineTarget(ModelBaseClass):
                 $500 per day.
         '''
 
-        print('Pulling data for symbol_id {}'.format(symbol_id))
+        print(f'Pulling data for symbol_id {symbol_id}')
         data = self.get_df('get_combined_data',symbol_id=symbol_id)
         if not reset:
             data = data[data.defined_target.isnull()]
-        print('Adding targets for {} points'.format(data.shape[0]))
+        print(f'Adding targets for {data.shape[0]} points')
         for i in range(data.shape[0]-11):
             idx = data.iloc[i].idx
             ohlc_average = data.iloc[i].ohlc_average
