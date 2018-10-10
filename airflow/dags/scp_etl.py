@@ -39,28 +39,28 @@ dag = DAG(
 
 for symbol_id,symbol in symbols.items():
     ihub_etl = PythonOperator(
-        task_id='{0}_{1}_update_posts'.format(symbol_id,symbol),
+        task_id=f'{symbol_id:03}_{symbol}_update_posts',
         python_callable=ihub.update_posts,
         op_args=[symbol_id],
         dag=dag
     )
 
     stock_etl = PythonOperator(
-        task_id='{0}_{1}_update_price_history'.format(symbol_id,symbol),
+        task_id=f'{symbol_id:03}_{symbol}_update_price_history',
         python_callable=sd.update_stock_data,
         op_args=[symbol_id],
         dag=dag
     )
 
     combine_data = PythonOperator(
-        task_id='{0}_{1}_combine_data'.format(symbol_id,symbol),
+        task_id=f'{symbol_id:03}_{symbol}_combine_data',
         python_callable=cd.compile_data,
         op_args=[symbol_id],
         dag=dag
     )
 
     define_target = PythonOperator(
-        task_id='{0}_{1}_define_target'.format(symbol_id,symbol),
+        task_id=f'{symbol_id:03}_{symbol}_define_target',
         python_callable=dt.add_target,
         op_args=[symbol_id],
         dag=dag
