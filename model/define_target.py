@@ -26,13 +26,12 @@ class DefineTarget(ModelBaseClass):
                 $500 per day.
         '''
 
+        print(f'Pulling data for symbol_id {symbol_id}')
         data = self.get_df('get_combined_data',symbol_id=symbol_id)
-
-        print('generating target...')
+        if not reset:
+            data = data[data.defined_target.isnull()]
+        print(f'Adding targets for {data.shape[0]} points')
         for i in range(data.shape[0]-11):
-            if not reset:
-                if not np.isnan(data.iloc[i].defined_target):
-                    continue
             idx = data.iloc[i].idx
             ohlc_average = data.iloc[i].ohlc_average
             wk_avg1 = data.iloc[i+1:i+6].ohlc_average.mean()
@@ -73,14 +72,15 @@ WHERE idx = {2};
 
 if __name__ == '__main__':
     dt = DefineTarget()
-    # dt.add_target(89)
+    # dt.add_target(20)
+    df = dt.add_target(113)
 
-    symbol_ids = dt.get_list('symbol_ids')
+    # symbol_ids = dt.get_list('symbol_ids')
     # grp1 = [x for x in symbol_ids if not x%4]
     # grp2 = [x for x in symbol_ids if not (x+1)%4]
     # grp3 = [x for x in symbol_ids if not (x+2)%4]
     # grp4 = [x for x in symbol_ids if not (x+3)%4]
     # for symbol_id in eval(argv[1]):
-    for symbol_id in symbol_ids:
-        print(symbol_id)
-        dt.add_target(symbol_id)
+    # for symbol_id in symbol_ids:
+    #     print(symbol_id)
+    #     dt.add_target(symbol_id)
