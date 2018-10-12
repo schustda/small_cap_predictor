@@ -7,7 +7,6 @@ from model.combine_data import CombineData
 from model.define_target import DefineTarget
 from datetime import datetime, timedelta
 
-
 ihub = IhubData()
 sd = StockData()
 cd = CombineData()
@@ -38,6 +37,15 @@ dag = DAG(
     schedule_interval="@daily")
 
 for symbol_id,symbol in symbols.items():
+
+
+    check_ihub_link_etl = PythonOperator(
+        task_id=f'{symbol_id:03}_{symbol}_check_link',
+        python_callable=ihub.check_link_integrity,
+        op_args=[symbol_id],
+        dag=dag
+    )
+
     ihub_etl = PythonOperator(
         task_id=f'{symbol_id:03}_{symbol}_update_posts',
         python_callable=ihub.update_posts,
@@ -66,6 +74,7 @@ for symbol_id,symbol in symbols.items():
         dag=dag
     )
 
+    check_ihub_link_etl.set_downstream(ihub_etl)
     stock_etl.set_downstream(combine_data)
     ihub_etl.set_downstream(combine_data)
     combine_data.set_downstream(define_target)
