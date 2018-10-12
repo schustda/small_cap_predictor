@@ -2,7 +2,6 @@ import requests
 import numpy as np
 import pandas as pd
 from random import randint
-from retrying import retry
 from time import time,sleep
 from bs4 import BeautifulSoup
 from emails.send_emails import Email
@@ -16,21 +15,31 @@ class IhubData(Email, GeneralFunctions):
         self.verbose = verbose
         self.delay = delay
 
-    def _check_link_integrity(self,symbol_id,ihub_code):
+    def check_link_integrity(self,symbol_id):
         '''
+        Input: symbol_id (int)
+
         If a stock has updated it's symbol, the investorshub website will have
             a new link for the message board forum. This function is a failsafe
-            to make sure the symbol is correct.
+            to make sure the link is up to date.
         '''
 
+        ihub_code = self.get_value('ihub_code',symbol_id=symbol_id)
         URL = "https://investorshub.advfn.com/"+str(ihub_code)
         content = requests.get(URL).content
         soup = BeautifulSoup(content, "lxml")
+
+        # This location in the website will contain the current link
         tag = soup.find_all('a', id="ctl00_CP1_btop_hlBoard")[0]['href'][1:-1]
+
+        # If there is in fact a new link, then this will update the database
+        # with the new link and symbol
         if ihub_code != tag:
             new_symbol = tag.split('-')[-2].lower()
             self._update_link(symbol_id,tag,new_symbol)
-        return tag
+            print (f'NEW SYMBOL {symbol} changed to {new_symbol}')
+        else:
+            print (f'No change in symbol')
 
     def _update_link(self,symbol_id,tag,new_symbol):
         '''
@@ -54,13 +63,15 @@ class IhubData(Email, GeneralFunctions):
             SET symbol = '{0}', ihub_code = '{1}', modified_date = '{2}'
             WHERE symbol_id = {3};
             '''.format(new_symbol,tag,pd.Timestamp.now(),symbol_id)
-        print(update_query)
         self.cursor.execute(update_query)
         self.conn.commit()
         self.send_email('update_symbol',['',new_symbol])
 
     def _total_and_num_pinned(self,url):
         '''
+        Function call gets the most recent page for the message board and
+            extracts both num_pinned, and num_posts (desc below)
+
         Output
         ------
         num_pinned: int, shows how many posts are 'pinned' on the top of the
@@ -84,6 +95,8 @@ class IhubData(Email, GeneralFunctions):
 
     def _clean_table(self, table, sort):
         '''
+        Function takes the raw dataframe and formats it
+
         Parameters
         ----------
         df: pandas dataframe,
@@ -112,7 +125,6 @@ class IhubData(Email, GeneralFunctions):
             df.sort_values('post_number',inplace = True)
         return df
 
-    # @retry(stop_max_attempt_number=10,wait_random_min=10000,wait_random_max=20000)
     def _get_page(self, url, num_pinned = 0, post_number = 1,
             most_recent = False, sort = True, error_list = []):
         '''
@@ -164,19 +176,14 @@ class IhubData(Email, GeneralFunctions):
 
     def update_posts(self,symbol_id):
 
+        # first, pull the necessary symbol info
         symbol = self.get_value('symbol',symbol_id=symbol_id)
-
-        # first, pull the code used by ihub
         ihub_code = self.get_value('ihub_code',symbol_id=symbol_id)
-
-        # check that the link is still the correct one
-        ihub_code = self._check_link_integrity(symbol_id,ihub_code)
-
-        # get the post number for the last post as well as the number of pinned
         num_pinned, num_posts = self._total_and_num_pinned(ihub_code)
 
         self.interval_time, self.original_time = time(), time()
 
+        # calculate which post numbers are missing from the database
         posts_to_add = set(range(1,num_posts+1))
         already_added = set(self.get_list('existing_posts',symbol_id=symbol_id))
         posts_to_add -= already_added
@@ -198,7 +205,7 @@ class IhubData(Email, GeneralFunctions):
                     page += 1
 
                 except Exception as e:
-                    print ('{0} ERROR ON PAGE: {1} for {2}'.format(e, str(post_number),ihub_code))
+                    print (f'{e} ERROR ON PAGE: {str(post_number)} for {ihub_code}')
                     error_list.append(post_number)
                     page_df = pd.DataFrame()
                     break
@@ -216,12 +223,16 @@ class IhubData(Email, GeneralFunctions):
 
 
 if __name__ == '__main__':
+    symbol_id = 27
     data = IhubData(verbose = 1,delay=False)
-    symbol_ids = data.get_list('symbol_ids')
+    # ihub_code = data.get_value('ihub_code',symbol_id=symbol_id)
+    # tag = data._check_link_integrity(symbol_id,ihub_code)
+    # print (ihub_code,tag)
+    # symbol_ids = data.get_list('symbol_ids')
     # grp1 = [x for x in symbol_ids if not x%4]
     # grp2 = [x for x in symbol_ids if not (x+1)%4]
     # grp3 = [x for x in symbol_ids if not (x+2)%4]
     # grp4 = [x for x in symbol_ids if not (x+3)%4]
-    for symbol_id in symbol_ids:
+    # for symbol_id in symbol_ids:
     # for symbol_id in eval(argv[1]):
-        df = data.update_posts(symbol_id)
+    data.update_posts(symbol_id)
