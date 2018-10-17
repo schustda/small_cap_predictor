@@ -50,7 +50,7 @@ dag=dag
 
 for symbol_id,symbol in symbols.items():
     working_split = PythonOperator(
-        task_id='{0}_split'.format(symbol),
+        task_id=f'{symbol_id:03}_{symbol}__split',
         python_callable=td.working_split,
         op_args=[symbol_id],
         dag=dag
