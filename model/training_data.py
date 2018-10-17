@@ -80,7 +80,8 @@ class TrainingData(ModelBaseClass):
         # stock has been on the market
 
         all_idxs = set(df.idx)
-        df = df[self.model_params['num_days']:].dropna(subset=['defined_target'])
+        num_points_to_drop = self.model_params['num_days'] + self.model_params['stock_start_buffer']
+        df = df[num_points_to_drop:].dropna(subset=['defined_target'])
         incomplete_points = all_idxs - set(df.idx)
         print ('Dropping {0} incomplete points'.format(len(incomplete_points)))
         self.set_split('pred_eligible',incomplete_points,value_to_set='FALSE')
@@ -131,9 +132,10 @@ if __name__ == '__main__':
 
 
     td = TrainingData(verbose=True)
-    td.model_development_split()
-    td.create_training_data('model_development_train')
-    td.create_training_data('model_development_test')
+    # td.working_split(1)
+    # td.model_development_split()
+    # td.create_training_data('model_development_train')
+    # td.create_training_data('model_development_test')
     # td.working_train_validation()
     # df = td.pull_and_transform_point(1689)
 
