@@ -2,9 +2,11 @@ import airflow
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from model.training_data import TrainingData
+from model.tensorflow_model import TFModel
 from datetime import datetime, timedelta
 
 td = TrainingData()
+tfm = TFModel(load_data=True)
 symbols = td.get_dict('symbols')
 
 args = {
@@ -48,6 +50,22 @@ op_args=['model_development_test'],
 dag=dag
 )
 
+build_model = PythonOperator(
+task_id='build_model',
+python_callable=tfm.build_model,
+dag=dag
+)
+fit_model = PythonOperator(
+task_id='fit_model',
+python_callable=tfm.fit_model,
+dag=dag
+)
+save_model = PythonOperator(
+task_id='save_model',
+python_callable=tfm.save_model,
+dag=dag
+)
+
 for symbol_id,symbol in symbols.items():
     working_split = PythonOperator(
         task_id=f'{symbol_id:03}_{symbol}__split',
@@ -60,3 +78,9 @@ for symbol_id,symbol in symbols.items():
 
 model_development_split.set_downstream(create_training_data_train)
 model_development_split.set_downstream(create_training_data_test)
+
+create_training_data_train.set_downstream(build_model)
+create_training_data_test.set_downstream(build_model)
+
+build_model.set_downstream(fit_model)
+fit_model.set_downstream(save_model)

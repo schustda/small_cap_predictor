@@ -5,12 +5,14 @@ from etl.ihub_data import IhubData
 from etl.stock_data import StockData
 from model.combine_data import CombineData
 from model.define_target import DefineTarget
+from model.tensorflow_model import TFModel
 from datetime import datetime, timedelta
 
 ihub = IhubData()
 sd = StockData()
 cd = CombineData()
 dt = DefineTarget()
+tf = TFModel()
 symbols = ihub.get_dict('symbols')
 
 args = {
@@ -74,7 +76,23 @@ for symbol_id,symbol in symbols.items():
         dag=dag
     )
 
+    load_model = PythonOperator(
+        task_id=f'load_model',
+        python_callable=tf.load_model,
+        dag=dag
+    )
+
+    add_predictions_to_db = PythonOperator(
+        task_id=f'add_predictions',
+        python_callable=tf.add_predictions_to_db,
+        op_args=['append'],
+        dag=dag
+    )
+
+
     check_ihub_link_etl.set_downstream(ihub_etl)
     stock_etl.set_downstream(combine_data)
     ihub_etl.set_downstream(combine_data)
     combine_data.set_downstream(define_target)
+    define_target.set_downstream(load_model)
+    load_model.set_downstream(add_predictions_to_db)
