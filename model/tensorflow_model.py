@@ -53,7 +53,7 @@ class TFModel(ModelBaseClass):
 
                 idx_processed += 1
 
-            preds = np.nan_to_num(self.model.predict_proba(pred_data))**(1/self.model_params['target_power'])
+            preds = np.nan_to_num(self.model.predict_proba(pred_data)**(1/self.model_params['target_power']))
             update_query = ''
             for idx,pred in zip(idx_chunk,preds):
                 update_query += '''
