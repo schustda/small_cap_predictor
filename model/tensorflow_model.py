@@ -40,7 +40,17 @@ class TFModel(ModelBaseClass):
                 replacements = {'{idx}':idx,'{num_days}':num_days}
                 df = self.get_df('model_point',replacements=replacements)
                 df = df.sort_values('date')
-                pred_data[num] = self.transform(df)
+                try:
+                    pred_data[num] = self.transform(df)
+                except:
+                    print(f'Found exception at idx {idx}')
+                    update_query = '''
+                        UPDATE model.combined_data
+                        SET pred_eligible = FALSE, modified_date = '{0}'
+                        WHERE idx = {1};
+                        '''.format(pd.Timestamp.now(),idx)
+                    self.execute_query(update_query)
+
                 idx_processed += 1
 
             preds = self.model.predict_proba(pred_data)**(1/self.model_params['target_power'])

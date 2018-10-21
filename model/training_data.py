@@ -82,9 +82,9 @@ class TrainingData(ModelBaseClass):
         all_idxs = set(df.idx)
         num_points_to_drop = self.model_params['num_days'] + self.model_params['stock_start_buffer']
         df = df[num_points_to_drop:].dropna(subset=['defined_target'])
-        incomplete_points = all_idxs - set(df.idx)
-        print ('Dropping {0} incomplete points'.format(len(incomplete_points)))
-        self.set_split('pred_eligible',incomplete_points,value_to_set='FALSE')
+        # incomplete_points = all_idxs - set(df.idx)
+        # print ('Dropping {0} incomplete points'.format(len(incomplete_points)))
+        # self.set_split('pred_eligible',incomplete_points,value_to_set='FALSE')
 
         train,validation = train_test_split(df.idx.tolist())
         self.insert_splits({'working_train':train,
