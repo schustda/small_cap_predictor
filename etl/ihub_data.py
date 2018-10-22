@@ -53,8 +53,8 @@ class IhubData(Email, GeneralFunctions):
         old_symbol = self.get_value('symbol', symbol_id=symbol_id)
 
         # First append the changed symbol table
-        df = pd.DataFrame(columns=['symbol_id','changed_from','changed_to','date_modified'])
-        df.loc[0] = [symbol_id,old_symbol,new_symbol,pd.Timestamp.now()]
+        df = pd.DataFrame(columns=['symbol_id', 'changed_from', 'changed_to', 'date_modified'])
+        df.loc[0] = [symbol_id, old_symbol, new_symbol, pd.Timestamp.now()]
         self.to_table(df, 'items.changed_symbol')
 
         # Then modify the symbols table
@@ -62,7 +62,7 @@ class IhubData(Email, GeneralFunctions):
             UPDATE items.symbol
             SET symbol = '{0}', ihub_code = '{1}', modified_date = '{2}'
             WHERE symbol_id = {3};
-            '''.format(new_symbol,tag, pd.Timestamp.now(), symbol_id)
+            '''.format(new_symbol, tag, pd.Timestamp.now(), symbol_id)
         self.cursor.execute(update_query)
         self.conn.commit()
         self.send_email('update_symbol', ['', new_symbol])
@@ -118,10 +118,10 @@ class IhubData(Email, GeneralFunctions):
         df.columns = ['post_number', 'subject', 'username', 'post_time']
         df[['subject', 'username']] = df[['subject', 'username']].applymap(
             lambda x: x.strip('-#\n\r').replace('\n', "").replace(
-            '\r', '').replace('\t', '').replace('\\', ''))
+                '\r', '').replace('\t', '').replace('\\', ''))
         df.post_number = df['post_number'].map(lambda x: x.strip(
             '-#\n\r').replace(' ', '').replace('\n', "").replace(
-            '\r', '').split('\xa0')[0])
+                '\r', '').split('\xa0')[0])
         df.post_number = df.post_number.astype(float)
         df.post_number = df.post_number.astype(int)
         df['post_time'] = pd.to_datetime(df['post_time'])
@@ -129,8 +129,8 @@ class IhubData(Email, GeneralFunctions):
             df.sort_values('post_number', inplace = True)
         return df
 
-    def _get_page(self, url, num_pinned = 0, post_number = 1,
-            most_recent = False, sort = True, error_list = []):
+    def _get_page(self, url, num_pinned=0, post_number=1,
+                  most_recent=False, sort=True, error_list=[]):
         '''
         Parameters
         ----------
@@ -181,27 +181,27 @@ class IhubData(Email, GeneralFunctions):
     def update_posts(self, symbol_id):
 
         # first, pull the necessary symbol info
-        symbol = self.get_value('symbol',symbol_id=symbol_id)
-        ihub_code = self.get_value('ihub_code',symbol_id=symbol_id)
+        symbol = self.get_value('symbol', symbol_id=symbol_id)
+        ihub_code = self.get_value('ihub_code', symbol_id=symbol_id)
         num_pinned, num_posts = self._total_and_num_pinned(ihub_code)
 
         self.interval_time, self.original_time = time(), time()
 
         # calculate which post numbers are missing from the database
-        posts_to_add = set(range(1,num_posts+1))
+        posts_to_add = set(range(1, num_posts+1))
         already_added = set(self.get_list('existing_posts', symbol_id=symbol_id))
         posts_to_add -= already_added
 
         error_list = []
         total_posts_to_add = len(posts_to_add)
-        print("Adding {0} post(s) for {1} ({2})".format(total_posts_to_add, symbol,symbol_id))
+        print(f"Adding {total_posts_to_add} post(s) for {symbol} ({symbol_id})")
         while len(posts_to_add) > 0:
             post_number = max(posts_to_add)
             page = post_number
             while True:
                 try:
                     page_df, error_list = self._get_page(ihub_code, post_number=page,
-                        num_pinned=num_pinned, error_list = error_list)
+                        num_pinned=num_pinned, error_list=error_list)
                     break
 
                 # if the number one post is deleted and you're calling it, it will fail
@@ -221,14 +221,14 @@ class IhubData(Email, GeneralFunctions):
             if self.verbose:
                 num = (total_posts_to_add-len(posts_to_add))
                 total = total_posts_to_add
-                self.status_update(num,total)
+                self.status_update(num, total)
             if self.delay:
                 sleep(randint(2, 15))
 
 
 if __name__ == '__main__':
     symbol_id = 27
-    data = IhubData(verbose = 1, delay=False)
+    data = IhubData(verbose=1, delay=False)
     # ihub_code = data.get_value('ihub_code', symbol_id=symbol_id)
     # tag = data._check_link_integrity(symbol_id, ihub_code)
     # print(ihub_code, tag)
