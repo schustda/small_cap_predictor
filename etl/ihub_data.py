@@ -126,7 +126,7 @@ class IhubData(Email, GeneralFunctions):
         df.post_number = df.post_number.astype(int)
         df['post_time'] = pd.to_datetime(df['post_time'])
         if sort:
-            df.sort_values('post_number', inplace = True)
+            df.sort_values('post_number', inplace=True)
         return df
 
     def _get_page(self, url, num_pinned=0, post_number=1,
@@ -201,7 +201,8 @@ class IhubData(Email, GeneralFunctions):
             while True:
                 try:
                     page_df, error_list = self._get_page(ihub_code, post_number=page,
-                        num_pinned=num_pinned, error_list=error_list)
+                                                         num_pinned=num_pinned,
+                                                         error_list=error_list)
                     break
 
                 # if the number one post is deleted and you're calling it, it will fail
@@ -224,19 +225,3 @@ class IhubData(Email, GeneralFunctions):
                 self.status_update(num, total)
             if self.delay:
                 sleep(randint(2, 15))
-
-
-if __name__ == '__main__':
-    symbol_id = 27
-    data = IhubData(verbose=1, delay=False)
-    # ihub_code = data.get_value('ihub_code', symbol_id=symbol_id)
-    # tag = data._check_link_integrity(symbol_id, ihub_code)
-    # print(ihub_code, tag)
-    # symbol_ids = data.get_list('symbol_ids')
-    # grp1 = [x for x in symbol_ids if not x%4]
-    # grp2 = [x for x in symbol_ids if not (x+1)%4]
-    # grp3 = [x for x in symbol_ids if not (x+2)%4]
-    # grp4 = [x for x in symbol_ids if not (x+3)%4]
-    # for symbol_id in symbol_ids:
-    # for symbol_id in eval(argv[1]):
-    data.update_posts(symbol_id)
