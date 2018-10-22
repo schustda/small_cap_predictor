@@ -25,7 +25,7 @@ class IhubData(Email, GeneralFunctions):
 
         ihub_code = self.get_value('ihub_code', symbol_id=symbol_id)
         url = "https://investorshub.advfn.com/"+str(ihub_code)
-        content = requests.get(URL).content
+        content = requests.get(url).content
         soup = BeautifulSoup(content, "lxml")
 
         # This location in the website will contain the current link
@@ -36,7 +36,7 @@ class IhubData(Email, GeneralFunctions):
         if ihub_code != tag:
             new_symbol = tag.split('-')[-2].lower()
             self._update_link(symbol_id, tag, new_symbol)
-            print(f'NEW SYMBOL {symbol} changed to {new_symbol}')
+            print(f'New Symbol. Changed to {new_symbol}')
         else:
             print(f'No change in symbol')
 
@@ -86,8 +86,8 @@ class IhubData(Email, GeneralFunctions):
             # Number of pinned posts determined by the number of posts that are not
             # in 'numerical' order at the top of the page
             post_list = df.post_number.tolist()
-            for i in range(len(post_list)):
-                if post_list[i] == post_list[i+1]+1:
+            for i, post in enumerate(post_list):
+                if post == post_list[i+1]+1:
                     return i, post_list[i]
         except:
             return 0, 0
@@ -145,7 +145,7 @@ class IhubData(Email, GeneralFunctions):
         url = "https://investorshub.advfn.com/"+str(url)
         if not most_recent:
             url += "/?NextStart="+str(post_number)
-        content = requests.get(URL).content
+        content = requests.get(url).content
         soup = BeautifulSoup(content, "lxml")
         rows = list(soup.find('table', id="ctl00_CP1_gv"))
         table = []
