@@ -37,9 +37,9 @@ class IhubData(Email, GeneralFunctions):
         if ihub_code != tag:
             new_symbol = tag.split('-')[-2].lower()
             self._update_link(symbol_id, tag, new_symbol)
-            print (f'NEW SYMBOL {symbol} changed to {new_symbol}')
+            print(f'NEW SYMBOL {symbol} changed to {new_symbol}')
         else:
-            print (f'No change in symbol')
+            print(f'No change in symbol')
 
     def _update_link(self, symbol_id, tag, new_symbol):
         '''
@@ -82,7 +82,7 @@ class IhubData(Email, GeneralFunctions):
 
         try:
             # Retrieve the first page on the board
-            df, _ = self._get_page(url, most_recent=True, sort = False)
+            df, _ = self._get_page(url, most_recent=True, sort=False)
 
             # Number of pinned posts determined by the number of posts that are not
             # in 'numerical' order at the top of the page
@@ -91,7 +91,7 @@ class IhubData(Email, GeneralFunctions):
                 if post_list[i] == post_list[i+1]+1:
                     return i, post_list[i]
         except:
-            return 0,0
+            return 0, 0
 
     def _clean_table(self, table, sort):
         '''
@@ -116,8 +116,12 @@ class IhubData(Email, GeneralFunctions):
         df = pd.DataFrame(table)
         df = df.applymap(lambda x: x.text)
         df.columns = ['post_number', 'subject', 'username', 'post_time']
-        df[['subject', 'username']] = df[['subject', 'username']].applymap(lambda x: x.strip('-#\n\r').replace('\n', "").replace('\r', '').replace('\t', '').replace('\\', ''))
-        df.post_number = df['post_number'].map(lambda x: x.strip('-#\n\r').replace(' ', '').replace('\n', "").replace('\r', '').split('\xa0')[0])
+        df[['subject', 'username']] = df[['subject', 'username']].applymap(
+            lambda x: x.strip('-#\n\r').replace('\n', "").replace(
+            '\r', '').replace('\t', '').replace('\\', ''))
+        df.post_number = df['post_number'].map(lambda x: x.strip(
+            '-#\n\r').replace(' ', '').replace('\n', "").replace(
+            '\r', '').split('\xa0')[0])
         df.post_number = df.post_number.astype(float)
         df.post_number = df.post_number.astype(int)
         df['post_time'] = pd.to_datetime(df['post_time'])
@@ -205,7 +209,7 @@ class IhubData(Email, GeneralFunctions):
                     page += 1
 
                 except Exception as e:
-                    print (f'{e} ERROR ON PAGE: {str(post_number)} for {ihub_code}')
+                    print(f'{e} ERROR ON PAGE: {str(post_number)} for {ihub_code}')
                     error_list.append(post_number)
                     page_df = pd.DataFrame()
                     break
@@ -225,9 +229,9 @@ class IhubData(Email, GeneralFunctions):
 if __name__ == '__main__':
     symbol_id = 27
     data = IhubData(verbose = 1, delay=False)
-    # ihub_code = data.get_value('ihub_code',symbol_id=symbol_id)
-    # tag = data._check_link_integrity(symbol_id,ihub_code)
-    # print (ihub_code,tag)
+    # ihub_code = data.get_value('ihub_code', symbol_id=symbol_id)
+    # tag = data._check_link_integrity(symbol_id, ihub_code)
+    # print(ihub_code, tag)
     # symbol_ids = data.get_list('symbol_ids')
     # grp1 = [x for x in symbol_ids if not x%4]
     # grp2 = [x for x in symbol_ids if not (x+1)%4]
