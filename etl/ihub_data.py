@@ -1,12 +1,11 @@
+from time import time, sleep
+from random import randint
 import requests
 import numpy as np
 import pandas as pd
-from random import randint
-from time import time, sleep
 from bs4 import BeautifulSoup
 from emails.send_emails import Email
 from src.general_functions import GeneralFunctions
-from sys import argv
 
 class IhubData(Email, GeneralFunctions):
 
@@ -25,7 +24,7 @@ class IhubData(Email, GeneralFunctions):
         '''
 
         ihub_code = self.get_value('ihub_code', symbol_id=symbol_id)
-        URL = "https://investorshub.advfn.com/"+str(ihub_code)
+        url = "https://investorshub.advfn.com/"+str(ihub_code)
         content = requests.get(URL).content
         soup = BeautifulSoup(content, "lxml")
 
@@ -143,9 +142,9 @@ class IhubData(Email, GeneralFunctions):
         ------
         df: pandas dataframe, pulled from the webpage, parsed, and cleaned
         '''
-        URL = "https://investorshub.advfn.com/"+str(url)
+        url = "https://investorshub.advfn.com/"+str(url)
         if not most_recent:
-            URL += "/?NextStart="+str(post_number)
+            url += "/?NextStart="+str(post_number)
         content = requests.get(URL).content
         soup = BeautifulSoup(content, "lxml")
         rows = list(soup.find('table', id="ctl00_CP1_gv"))
