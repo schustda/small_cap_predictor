@@ -36,12 +36,12 @@ class IhubData(Email, GeneralFunctions):
         # with the new link and symbol
         if ihub_code != tag:
             new_symbol = tag.split('-')[-2].lower()
-            self._update_link(symbol_id,tag,new_symbol)
+            self._update_link(symbol_id, tag, new_symbol)
             print (f'NEW SYMBOL {symbol} changed to {new_symbol}')
         else:
             print (f'No change in symbol')
 
-    def _update_link(self,symbol_id,tag,new_symbol):
+    def _update_link(self, symbol_id, tag, new_symbol):
         '''
         If the symbol has been updated, this function will update the databases
             for the messsage boards, stock prices, ticker_symbols.
@@ -50,22 +50,22 @@ class IhubData(Email, GeneralFunctions):
         '''
 
         # First pull the existing symbol
-        old_symbol = self.get_value('symbol',symbol_id=symbol_id)
+        old_symbol = self.get_value('symbol', symbol_id=symbol_id)
 
         # First append the changed symbol table
         df = pd.DataFrame(columns=['symbol_id','changed_from','changed_to','date_modified'])
         df.loc[0] = [symbol_id,old_symbol,new_symbol,pd.Timestamp.now()]
-        self.to_table(df,'items.changed_symbol')
+        self.to_table(df, 'items.changed_symbol')
 
         # Then modify the symbols table
         update_query = '''
             UPDATE items.symbol
             SET symbol = '{0}', ihub_code = '{1}', modified_date = '{2}'
             WHERE symbol_id = {3};
-            '''.format(new_symbol,tag,pd.Timestamp.now(),symbol_id)
+            '''.format(new_symbol,tag, pd.Timestamp.now(), symbol_id)
         self.cursor.execute(update_query)
         self.conn.commit()
-        self.send_email('update_symbol',['',new_symbol])
+        self.send_email('update_symbol', ['', new_symbol])
 
     def _total_and_num_pinned(self, url):
         '''
@@ -82,7 +82,7 @@ class IhubData(Email, GeneralFunctions):
 
         try:
             # Retrieve the first page on the board
-            df, _ = self._get_page(url,most_recent=True,sort = False)
+            df, _ = self._get_page(url, most_recent=True, sort = False)
 
             # Number of pinned posts determined by the number of posts that are not
             # in 'numerical' order at the top of the page
@@ -115,14 +115,14 @@ class IhubData(Email, GeneralFunctions):
 
         df = pd.DataFrame(table)
         df = df.applymap(lambda x: x.text)
-        df.columns = ['post_number','subject','username','post_time']
-        df[['subject','username']] = df[['subject','username']].applymap(lambda x: x.strip('-#\n\r').replace('\n', "").replace('\r','').replace('\t','').replace('\\',''))
-        df.post_number = df['post_number'].map(lambda x: x.strip('-#\n\r').replace(' ','').replace('\n', "").replace('\r','').split('\xa0')[0])
+        df.columns = ['post_number', 'subject', 'username', 'post_time']
+        df[['subject', 'username']] = df[['subject', 'username']].applymap(lambda x: x.strip('-#\n\r').replace('\n', "").replace('\r', '').replace('\t', '').replace('\\', ''))
+        df.post_number = df['post_number'].map(lambda x: x.strip('-#\n\r').replace(' ', '').replace('\n', "").replace('\r', '').split('\xa0')[0])
         df.post_number = df.post_number.astype(float)
         df.post_number = df.post_number.astype(int)
         df['post_time'] = pd.to_datetime(df['post_time'])
         if sort:
-            df.sort_values('post_number',inplace = True)
+            df.sort_values('post_number', inplace = True)
         return df
 
     def _get_page(self, url, num_pinned = 0, post_number = 1,
@@ -149,7 +149,7 @@ class IhubData(Email, GeneralFunctions):
         for row in rows[(2+num_pinned):-2]:
             cell_lst = [cell for cell in list(row)[1:5]]
             table.append(cell_lst)
-        return self._clean_table(table,sort), error_list
+        return self._clean_table(table, sort), error_list
 
     def _add_deleted_posts(self, page_df, post_number):
         '''
@@ -166,13 +166,13 @@ class IhubData(Email, GeneralFunctions):
         post is important when suming the posts per a given day.
         '''
 
-        should_be_on_page = set(range(min(page_df.post_number),post_number+1))
+        should_be_on_page = set(range(min(page_df.post_number), post_number+1))
         should_be_on_page.add(post_number)
         deleted_post_numbers = should_be_on_page - set(page_df.post_number)
         del_df = pd.DataFrame(columns=page_df.columns)
-        for num,post_num in enumerate(deleted_post_numbers):
-            del_df.loc[num] = [post_num,'<del>','<del>',np.nan]
-        return pd.concat([page_df,del_df])
+        for num, post_num in enumerate(deleted_post_numbers):
+            del_df.loc[num] = [post_num, '<del>', '<del>', np.nan]
+        return pd.concat([page_df, del_df])
 
     def update_posts(self, symbol_id):
 
@@ -185,19 +185,19 @@ class IhubData(Email, GeneralFunctions):
 
         # calculate which post numbers are missing from the database
         posts_to_add = set(range(1,num_posts+1))
-        already_added = set(self.get_list('existing_posts',symbol_id=symbol_id))
+        already_added = set(self.get_list('existing_posts', symbol_id=symbol_id))
         posts_to_add -= already_added
 
         error_list = []
         total_posts_to_add = len(posts_to_add)
-        print("Adding {0} post(s) for {1} ({2})".format(total_posts_to_add,symbol,symbol_id))
+        print("Adding {0} post(s) for {1} ({2})".format(total_posts_to_add, symbol,symbol_id))
         while len(posts_to_add) > 0:
             post_number = max(posts_to_add)
             page = post_number
             while True:
                 try:
-                    page_df, error_list = self._get_page(ihub_code,post_number=page,
-                        num_pinned=num_pinned,error_list = error_list)
+                    page_df, error_list = self._get_page(ihub_code, post_number=page,
+                        num_pinned=num_pinned, error_list = error_list)
                     break
 
                 # if the number one post is deleted and you're calling it, it will fail
@@ -210,21 +210,21 @@ class IhubData(Email, GeneralFunctions):
                     page_df = pd.DataFrame()
                     break
 
-            page_df = self._add_deleted_posts(page_df,post_number)
+            page_df = self._add_deleted_posts(page_df, post_number)
             page_df['symbol_id'] = symbol_id
-            self.to_table(page_df,'ihub.message_board')
+            self.to_table(page_df, 'ihub.message_board')
             posts_to_add -= set(page_df.post_number)
             if self.verbose:
                 num = (total_posts_to_add-len(posts_to_add))
                 total = total_posts_to_add
                 self.status_update(num,total)
             if self.delay:
-                sleep(randint(2,15))
+                sleep(randint(2, 15))
 
 
 if __name__ == '__main__':
     symbol_id = 27
-    data = IhubData(verbose = 1,delay=False)
+    data = IhubData(verbose = 1, delay=False)
     # ihub_code = data.get_value('ihub_code',symbol_id=symbol_id)
     # tag = data._check_link_integrity(symbol_id,ihub_code)
     # print (ihub_code,tag)
