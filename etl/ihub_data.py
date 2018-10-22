@@ -2,7 +2,7 @@ import requests
 import numpy as np
 import pandas as pd
 from random import randint
-from time import time,sleep
+from time import time, sleep
 from bs4 import BeautifulSoup
 from emails.send_emails import Email
 from src.general_functions import GeneralFunctions
@@ -10,12 +10,12 @@ from sys import argv
 
 class IhubData(Email, GeneralFunctions):
 
-    def __init__(self,verbose=0,delay=True):
+    def __init__(self, verbose=0, delay=True):
         super().__init__()
         self.verbose = verbose
         self.delay = delay
 
-    def check_link_integrity(self,symbol_id):
+    def check_link_integrity(self, symbol_id):
         '''
         Input: symbol_id (int)
 
@@ -24,7 +24,7 @@ class IhubData(Email, GeneralFunctions):
             to make sure the link is up to date.
         '''
 
-        ihub_code = self.get_value('ihub_code',symbol_id=symbol_id)
+        ihub_code = self.get_value('ihub_code', symbol_id=symbol_id)
         URL = "https://investorshub.advfn.com/"+str(ihub_code)
         content = requests.get(URL).content
         soup = BeautifulSoup(content, "lxml")
@@ -67,7 +67,7 @@ class IhubData(Email, GeneralFunctions):
         self.conn.commit()
         self.send_email('update_symbol',['',new_symbol])
 
-    def _total_and_num_pinned(self,url):
+    def _total_and_num_pinned(self, url):
         '''
         Function call gets the most recent page for the message board and
             extracts both num_pinned, and num_posts (desc below)
@@ -151,7 +151,7 @@ class IhubData(Email, GeneralFunctions):
             table.append(cell_lst)
         return self._clean_table(table,sort), error_list
 
-    def _add_deleted_posts(self, page_df,post_number):
+    def _add_deleted_posts(self, page_df, post_number):
         '''
         Parameters
         ----------
@@ -174,7 +174,7 @@ class IhubData(Email, GeneralFunctions):
             del_df.loc[num] = [post_num,'<del>','<del>',np.nan]
         return pd.concat([page_df,del_df])
 
-    def update_posts(self,symbol_id):
+    def update_posts(self, symbol_id):
 
         # first, pull the necessary symbol info
         symbol = self.get_value('symbol',symbol_id=symbol_id)
