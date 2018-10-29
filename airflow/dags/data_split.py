@@ -6,7 +6,8 @@ from model.tensorflow_model import TFModel
 from datetime import datetime, timedelta
 
 td = TrainingData()
-tfm = TFModel(load_data=True)
+tfm = TFModel()
+# tfm = TFModel(load_data=True)
 symbols = td.get_dict('symbols')
 
 args = {
