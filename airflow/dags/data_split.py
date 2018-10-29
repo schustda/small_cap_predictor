@@ -29,7 +29,8 @@ default_args = {
 
 dag = DAG(
     dag_id='data_split', default_args=args,
-    schedule_interval="@monthly")
+    schedule_interval=None)
+    # schedule_interval="@monthly")
 
 model_development_split = PythonOperator(
 task_id='model_development_split',
