@@ -13,6 +13,7 @@ sd = StockData()
 cd = CombineData()
 dt = DefineTarget()
 tf = TFModel()
+tf.load_model()
 symbols = ihub.get_dict('symbols')
 
 args = {
@@ -38,11 +39,11 @@ dag = DAG(
     dag_id='scp_etl', default_args=args,
     schedule_interval="@daily")
 
-load_model = PythonOperator(
-task_id=f'load_model',
-python_callable=tf.load_model,
-dag=dag
-)
+# load_model = PythonOperator(
+# task_id=f'load_model',
+# python_callable=tf.load_model,
+# dag=dag
+# )
 
 add_predictions_to_db = PythonOperator(
 task_id=f'add_predictions',
@@ -94,6 +95,7 @@ for symbol_id,symbol in symbols.items():
     stock_etl.set_downstream(combine_data)
     ihub_etl.set_downstream(combine_data)
     combine_data.set_downstream(define_target)
-    define_target.set_downstream(load_model)
+    # define_target.set_downstream(load_model)
+    define_target.set_downstream(add_predictions_to_db)
 
-load_model.set_downstream(add_predictions_to_db)
+# load_model.set_downstream(add_predictions_to_db)
