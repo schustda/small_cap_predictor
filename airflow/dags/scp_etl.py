@@ -48,7 +48,7 @@ dag = DAG(
 add_predictions_to_db = PythonOperator(
 task_id=f'add_predictions',
 python_callable=tf.add_predictions_to_db,
-op_args=['append'],
+op_args=['append','final_prediction'],
 dag=dag
 )
 

@@ -19,7 +19,7 @@ class TFModel(ModelBaseClass):
         self.model_json_path = 'model/model.json'
         self.model_weights_path = 'model/model.h5'
 
-    def add_predictions_to_db(self,method,chunksize=1000):
+    def add_predictions_to_db(self, method, category, chunksize=1000):
 
         if method == 'append':
             option = 'AND model_development_prediction IS NULL'
@@ -56,11 +56,11 @@ class TFModel(ModelBaseClass):
             preds = np.nan_to_num(self.model.predict_proba(pred_data)**(1/self.model_params['target_power']))
             update_query = ''
             for idx,pred in zip(idx_chunk,preds):
-                update_query += '''
+                update_query += f'''
                 UPDATE model.combined_data
-                SET model_development_prediction = {0}, modified_date = '{1}'
-                WHERE idx = {2};
-                '''.format(pred[0],pd.Timestamp.now(),idx)
+                SET {category} = {pred[0]},
+                    modified_date = "{pd.Timestamp.now()}"
+                WHERE idx = {idx};'''
             self.execute_query(update_query)
             self.status_update(idx_processed,total)
 
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     # using a model
     tfm = TFModel()
     tfm.load_model()
-    tfm.add_predictions_to_db(method='append',chunksize=1000)
+    tfm.add_predictions_to_db(method='append',chunksize=10)
     # tfm.add_predictions_to_db(method='append',chunksize=1000)
 
 
