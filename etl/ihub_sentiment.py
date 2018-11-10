@@ -3,7 +3,9 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from textblob import TextBlob
 from src.general_functions import GeneralFunctions
-from time import time
+from time import time, sleep
+from random import randint
+
 
 class IhubSentiment(GeneralFunctions):
 
