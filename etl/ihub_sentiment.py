@@ -44,7 +44,7 @@ class IhubSentiment(GeneralFunctions):
         start_page = 0
         total = 144699616
 
-        for i in range(stotal):
+        for i in range(total):
             df = self.get_message_page(i)
             self.to_table(df,'ihub.message_sentiment')
             self.status_update(i, total)
