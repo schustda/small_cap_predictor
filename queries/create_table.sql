@@ -23,7 +23,17 @@ CREATE TABLE ihub.message_board (
     subject varchar(255),
     username varchar(100),
     post_time timestamp,
+    sentiment_polarity float8,
+    sentiment_subjectivity float8,
     PRIMARY KEY (symbol_id, post_number)
+);
+
+CREATE TABLE ihub.message_sentiment (
+    message_id int PRIMARY KEY,
+    ihub_code varchar(255),
+    post_number int,
+    sentiment_polarity float8,
+    sentiment_subjectivity float8
 );
 
 CREATE TABLE market.price_history (
