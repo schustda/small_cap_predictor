@@ -57,11 +57,11 @@ class IhubData(Email, GeneralFunctions):
         self.to_table(df, 'items.changed_symbol')
 
         # Then modify the symbols table
-        update_query = '''
+        update_query = f'''
             UPDATE items.symbol
-            SET symbol = '{0}', ihub_code = '{1}', modified_date = '{2}'
-            WHERE symbol_id = {3};
-            '''.format(new_symbol, tag, pd.Timestamp.now(), symbol_id)
+            SET symbol = "{new_symbol}", ihub_code = "{tag}",
+                modified_date = "{pd.Timestamp.now()}"
+            WHERE symbol_id = {symbol_id};'''
         self.cursor.execute(update_query)
         self.conn.commit()
         self.send_email('update_symbol', ['', new_symbol])
@@ -194,7 +194,7 @@ class IhubData(Email, GeneralFunctions):
         error_list = []
         total_posts_to_add = len(posts_to_add)
         print(f"Adding {total_posts_to_add} post(s) for {symbol} ({symbol_id})")
-        while len(posts_to_add) > 0:
+        while posts_to_add:
             post_number = max(posts_to_add)
             page = post_number
             while True:
