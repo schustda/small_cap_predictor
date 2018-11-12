@@ -12,7 +12,7 @@ class TopAndBreakoutBoards(object):
         self.mr_url = 'http://investorshub.advfn.com/boards/most_read.aspx'
         self.mr_r = 5
 
-    def _get_page(self,url,r):
+    def _get_page(self):
         '''
         Parameters
         ----------
@@ -27,16 +27,22 @@ class TopAndBreakoutBoards(object):
             page from iHub's website.
         '''
 
+        url = 'http://investorshub.advfn.com/boards/most_read.aspx'
+        r = 5
         content = requests.get(url).content
         soup = BeautifulSoup(content, "lxml")
         rows = list(soup.find('table', id="ctl00_CP1_gv"))
         table_lst = []
         for row in rows[2:-1]:
-            cell_lst = [cell for cell in list(row)[r:r+1]]
+            cell_lst = [cell for cell in list(row)[1:8]]
             table_lst.append(cell_lst)
+        # return pd.DataFrame(table_lst)
+        return pd.DataFrame(table_lst)[1].map(lambda x: x.find('a').attrs['href'][3:-1])
+        # return pd.DataFrame(table_lst)
         df = pd.DataFrame(table_lst).applymap(lambda x: x.text)
         df = df.applymap(lambda x: x.strip('-#\n\r').replace('\n', "").replace('\r','').lower())
         df.columns = [pd.Timestamp("today").strftime("%m-%d-%Y")]
+        return df
         return df.transpose()
 
     def update_page_daily(self):
@@ -70,4 +76,4 @@ class TopAndBreakoutBoards(object):
 
 if __name__ == '__main__':
     tb = TopAndBreakoutBoards()
-    tb.update_page_daily()
+    df = tb._get_page()
