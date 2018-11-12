@@ -134,5 +134,6 @@ tableau/
 
 # avoiding putting postgres connection string
 airflow/airflow.cfg
+airflow/logs/
 
 # End of https://www.gitignore.io/api/linux,python
