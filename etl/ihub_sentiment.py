@@ -56,10 +56,10 @@ class IhubSentiment(GeneralFunctions):
             df.loc[0,'message_id'] = message_id
         return df
 
-    def get_queue(self,chunksize=1000):
+    def get_queue(self):
         self.total = 144699616
         already_added = set(self.get_list('sentiment_posts_added'))
-        return set(sample(set(range(self.total)) - already_added,chunksize))
+        return set(range(self.total)) - already_added
 
 
     def add_messages(self):
