@@ -12,6 +12,7 @@ class IhubSentiment(GeneralFunctions):
 
     def __init__(self):
         super().__init__()
+        self.total = 144699616
         self.bad_page_count = 0
 
     def get_message_page(self, message_id):
@@ -66,17 +67,18 @@ class IhubSentiment(GeneralFunctions):
     def add_messages(self):
 
         self.interval_time, self.original_time = time(), time()
-        queue = self.get_queue()
-        print('Loaded Queue')
+        # queue = self.get_queue()
+        # print('Loaded Queue')
         records_processed = 0
-        total = len(queue)
-        while len(queue):
-            message_id = sample(queue,1)[0]
+        # total = len(queue)
+        while records_processed < self.total:
+            # message_id = sample(queue,1)[0]
+            message_id = randint(1,self.total)
             try:
                 df = self.get_message_page(message_id)
                 self.to_table(df,'ihub.message_sentiment')
-                self.status_update(records_processed, total)
-                queue -= set([message_id])
+                self.status_update(records_processed, self.total)
+                # queue -= set([message_id])
                 records_processed += 1
                 sleep(randint(2, 8))
             except Exception as e:
