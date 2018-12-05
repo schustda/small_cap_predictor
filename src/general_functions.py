@@ -159,7 +159,8 @@ class GeneralFunctions(object):
             a = int(percent / 2) * '='
             b = (50 - int(percent / 2)) * '-'
             min_rem = str(int((elapsed_time) / percent * (100 - percent)))
-            print('\r', f'|{a}{b}| {num}/{total} ({percent:0.2f}%) - {min_rem} minute(s) remaining')
+            print('\r', f'|{a}{b}| {num}/{total} ({percent:0.2f}%) - {min_rem} minute(s) remaining', end = '')
+            sys.stdout.flush()
             self.interval_time = time()
 
 if __name__ == '__main__':
