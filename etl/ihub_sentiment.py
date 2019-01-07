@@ -24,7 +24,7 @@ class IhubSentiment(GeneralFunctions):
         '''
 
         url = f"https://investorshub.advfn.com/boards/read_msg.aspx?message_id={message_id}"
-        r = requests.get(url)
+        r = requests.get(url, timeout=100)
         content = r.content
         soup = BeautifulSoup(content, "lxml")
         response_code = soup.find_all(id="ctl00_CP1_L1")
