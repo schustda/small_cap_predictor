@@ -79,7 +79,7 @@ if __name__ == '__main__':
     max_num_instances = 1000
     instance_limit = 60*60*24*3
     sleep_mins = 20
-    instance_num = 1
+    instance_num = 2
     instances = {}
     while True:
 
