@@ -82,7 +82,7 @@ class IhubSentiment(GeneralFunctions):
         try:
             df = self.get_message_page(message_id)
             self.to_table(df,'ihub.message_sentiment')
-            sleep(randint(3, 10))
+            sleep(randint(2, 6))
         except Exception as e:
             print(e)
             sleep(60)
