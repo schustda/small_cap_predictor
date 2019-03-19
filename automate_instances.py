@@ -89,6 +89,6 @@ if __name__ == '__main__':
 
         for name, created_date in instances.items():
                 if (datetime.now() - created_date).total_seconds() > instance_limit:
-                delete_instance(compute, project, zone, name)
+                    delete_instance(compute, project, zone, name)
 
         sleep(60*sleep_mins)
