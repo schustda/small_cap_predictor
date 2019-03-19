@@ -1,5 +1,6 @@
 from googleapiclient import discovery
 from datetime import datetime
+from time import sleep
 
 def delete_instance(compute, project, zone, name):
     return compute.instances().delete(
