@@ -87,9 +87,12 @@ if __name__ == '__main__':
             instance_name = 'scp-{:06d}'.format(instance_num)
             create_instance(compute, project, zone, instance_name)
             instances[instance_name] = datetime.now()
+            instance_num += 1
+            print('Created Instance {0}'.format(instance_name))
 
         for name, created_date in instances.items():
                 if (datetime.now() - created_date).total_seconds() > instance_limit:
                     delete_instance(compute, project, zone, name)
+                    print('Deleted Instance {0}'.format(name))
 
         sleep(60*sleep_mins)
