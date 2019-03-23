@@ -76,10 +76,10 @@ if __name__ == '__main__':
     project = 'us-gm-175021'
     zone = 'us-east1-b'
 
-    max_num_instances = 1000
-    instance_limit = 60*60*24*3
-    sleep_mins = 20
-    instance_num = 2
+    max_num_instances = 20
+    instance_limit = 60*60
+    sleep_mins = .5
+    instance_num = 1
     instances = {}
     while True:
 
