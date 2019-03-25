@@ -1,6 +1,7 @@
 from googleapiclient import discovery
 from datetime import datetime
 from time import sleep
+from random import randint
 
 def delete_instance(compute, project, zone, name):
     return compute.instances().delete(
@@ -76,11 +77,12 @@ if __name__ == '__main__':
     project = 'us-gm-175021'
     zone = 'us-east1-b'
 
-    max_num_instances = 20
-    instance_limit = 60*60
-    sleep_mins = .5
+    max_num_instances = 30
+    instance_limit = 60*60*2
+    sleep_mins = .1
     instance_num = 1
     instances = {}
+    del_instances = []
     while True:
 
         if len(instances) < max_num_instances:
@@ -89,10 +91,19 @@ if __name__ == '__main__':
             instances[instance_name] = datetime.now()
             instance_num += 1
             print('Created Instance {0}'.format(instance_name))
+            sleep(randint(30, 90))
 
         for name, created_date in instances.items():
-                if (datetime.now() - created_date).total_seconds() > instance_limit:
-                    delete_instance(compute, project, zone, name)
-                    print('Deleted Instance {0}'.format(name))
+            if (datetime.now() - created_date).total_seconds() > instance_limit:
+                delete_instance(compute, project, zone, name)
+                del_instances.append(name)
 
+        for del_instance in del_instances:
+            del instances[del_instance]
+            print('Deleted Instance {0}'.format(name))
+        del_instances = []
+
+        # print('Active Instances:')
+        # for k, v in instances.items():
+        #     print ('{0} has been active for {1} seconds'.format(k, (datetime.now() - v).total_seconds()))
         sleep(60*sleep_mins)
