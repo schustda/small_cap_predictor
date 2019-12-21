@@ -32,7 +32,7 @@ class IhubSentiment(GeneralFunctions):
                    'sentiment_polarity','sentiment_subjectivity','message_date']
         df = pd.DataFrame(columns=columns)
 
-        if response_code:
+        if not response_code:
             self.verboseprint(response_code)
             self.bad_page_count += 1
             df.loc[0,'status'] = 'Error'
