@@ -12,7 +12,7 @@ from multiprocessing import Process, Pool
 class IhubSentiment(GeneralFunctions):
     def __init__(self, verbose=0):
         super().__init__(verbose)
-        self.total = 144699616
+        self.total = 152709616
         self.bad_page_count = 0
 
     def get_message_page(self, message_id):
