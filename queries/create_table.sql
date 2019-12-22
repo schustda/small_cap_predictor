@@ -1,8 +1,12 @@
+CREATE SCHEMA itmes;
+
 CREATE TABLE items.symbol (
     symbol_id SERIAL,
     symbol varchar(10) PRIMARY KEY,
     name varchar(255),
     ihub_code varchar(255),
+      -- REGEXP_REPLACE(ihub_code,'.*-','')::INTEGER
+    ihub_id int,
     status varchar(10) DEFAULT 'active',
     created_date timestamp DEFAULT current_timestamp,
     modified_date timestamp
@@ -29,11 +33,15 @@ CREATE TABLE ihub.message_board (
 );
 
 CREATE TABLE ihub.message_sentiment (
+    status varchar(20),
     message_id int PRIMARY KEY,
     ihub_code varchar(255),
     post_number int,
     sentiment_polarity float8,
-    sentiment_subjectivity float8
+    sentiment_subjectivity float8,
+    message_date timestamp,
+    created_date timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_date timestamp
 );
 
 CREATE TABLE market.price_history (

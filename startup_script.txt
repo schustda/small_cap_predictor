@@ -1,0 +1,8 @@
+cd Small-Cap-Predictor
+git fetch
+git reset --hard
+git pull
+sudo apt-get update
+source env/bin/activate
+tmux new_session -s s1
+source env/bin/activatetmux
