@@ -23,7 +23,7 @@ class IhubSentiment(GeneralFunctions):
         """
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+            "User-Agent": 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
         }
         url = f"https://investorshub.advfn.com/boards/read_msg.aspx?message_id={message_id}"
         r = requests.get(url, timeout=100, headers=headers)
@@ -109,7 +109,7 @@ class IhubSentiment(GeneralFunctions):
         try:
             df = self.get_message_page(message_id)
             self.to_table(df, "ihub.message_sentiment")
-            sleep(1)
+            sleep(randint(1,5))
         except Exception as e:
             print(e)
             sleep(60)
