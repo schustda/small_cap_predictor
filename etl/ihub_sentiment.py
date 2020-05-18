@@ -97,6 +97,8 @@ class IhubSentiment(GeneralFunctions):
         end = start + chunksize
         replacements = {'[START]': start, '[END]': end}
         already_added = set(self.get_list("sentiment_posts_added", replacements = replacements))
+        queue = set(range(start, end+1)) - already_added
+        self.verboseprint(f'Adding {len(queue)} posts between {start} and {end}') 
         return set(range(start, end+1)) - already_added
 
     def page_response(self, message_id, timeout = 10):
@@ -181,8 +183,7 @@ class IhubSentiment(GeneralFunctions):
         self.interval_time, self.original_time = time(), time()
         records_processed, records_added = 0, 0
         while records_processed < self.total:
-            message_id = randint(1, self.total)
-            if not self.get_value("message_id_exists", replacements={"{message_id}": message_id}):
+            for message_id in self.get_queue():
                 try:
                     self.verboseprint(message_id)
                     self.message_to_db(message_id)
