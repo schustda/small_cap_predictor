@@ -12,8 +12,12 @@ from multiprocessing import Process, Pool
 class IhubSentiment(GeneralFunctions):
     def __init__(self, verbose=0):
         super().__init__(verbose)
-        self.total = 152709616
+        self.total = 153009616
         self.bad_page_count = 0
+        self.headers = {
+            "User-Agent": 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+        }
+
 
     def get_message_page(self, message_id):
         """ Web scrapes post information from the specified message_id
@@ -88,9 +92,89 @@ class IhubSentiment(GeneralFunctions):
             df.loc[0, "message_id"] = message_id
         return df
 
-    def get_queue(self, chunksize=100000):
-        already_added = set(self.get_list("sentiment_posts_added"))
-        return set(sample(set(range(self.total)) - already_added, chunksize))
+    def get_queue(self, chunksize=1000):
+        start = randint(1,self.total)
+        end = start + chunksize
+        replacements = {'[START]': start, '[END]': end}
+        already_added = set(self.get_list("sentiment_posts_added", replacements = replacements))
+        return set(range(start, end+1)) - already_added
+
+    def page_response(self, message_id, timeout = 10):
+        '''
+        Use the requests and beautifulsoup modules to make the request to the website
+        '''
+        payload = {'message_id' : message_id}
+        url = f"https://investorshub.advfn.com/boards/read_msg.aspx"
+        r = requests.get(url=url, timeout=timeout, headers=self.headers, params = payload)
+        return BeautifulSoup(r.content, "lxml")
+
+
+    def get_message_data(self, message_id):
+        """ Web scrapes post information from the specified message_id
+
+        Parameters: message_id (int): The message number to extract data from
+        """
+
+        site_id_codes = {
+            "active": { 
+                # This is where the data from the post will originate from
+                'message' : "ctl00_CP1_mbdy_dv"
+            
+                # Where to extract the post number for the specific board the message is on
+                ,'post_number' : "ctl00_CP1_mh1_hlReply"
+            
+                # Finds the date the message was posted
+                ,'message_date' : "ctl00_CP1_mh1_lblDate"
+            
+                # extracting the code of the specific ticker or board
+                ,'ihub_code' : "ctl00_CP1_bbc1_hlBoard"
+            }
+            ,"error": { 
+                # If this id has any data, it means the post is erroneous
+                'missing_post' : "ctl00_CP1_L1"
+
+                # If a message was deleted, the message will appear here
+                ,'deleted_post' : 'ctl00_CP1_na'
+            }
+        }
+
+        try:
+            soup = self.page_response(message_id)
+        except requests.exceptions.Timeout:
+            return {}
+
+        output = {'message_id': message_id, 'status': 'Active'}
+
+
+        for id_type, id_code in site_id_codes['error'].items():
+            data = soup.find(id=id_code)
+            if data:
+                if id_type == 'missing_post':
+                    output['status'] = 'Error'
+                    output['error_message'] = data.text.strip()
+                    return output
+                if id_type == 'deleted_post':
+                    output['status'] = 'Error'
+                    output['error_message'] = data.text.strip()
+                    return output
+
+        for id_type, id_code in site_id_codes['active'].items():
+            data = soup.find(id=id_code)
+            if data:
+                if id_type == 'message':
+                    body = data.text.strip()
+                    tb = TextBlob(body)
+                    output['sentiment_polarity'], output['sentiment_subjectivity'] = tb.sentiment
+                if id_type == 'post_number':
+                    # Number from string, from: https://tinyurl.com/unazhvl
+                    output['post_number'] = [int(x) for x in data.text.split() if x.isdigit()][0]
+                if id_type == 'message_date':
+                    output['message_date'] = pd.to_datetime(data.text)
+                if id_type == 'ihub_code':
+                    output['ihub_code'] = data["href"].replace("/", "")
+        return output
+
+
 
     def add_messages(self):
 
@@ -98,48 +182,20 @@ class IhubSentiment(GeneralFunctions):
         records_processed, records_added = 0, 0
         while records_processed < self.total:
             message_id = randint(1, self.total)
-            if not self.get_value(
-                "message_id_exists", replacements={"{message_id}": message_id}
-            ):
-                self.message_to_db(message_id)
+            if not self.get_value("message_id_exists", replacements={"{message_id}": message_id}):
+                try:
+                    self.verboseprint(message_id)
+                    self.message_to_db(message_id)
+                    sleep(randint(5,15))
+                except Exception as e:
+                    print(e)
+                    sleep(60)
             records_processed += 1
             self.status_update(records_processed, self.total)
 
     def message_to_db(self, message_id):
-        try:
-            df = self.get_message_page(message_id)
-            self.to_table(df, "ihub.message_sentiment")
-            sleep(randint(1,5))
-        except Exception as e:
-            print(e)
-            sleep(60)
-
-    def add_messages_mp(self, chunksize=10000):
-
-        # https://www.journaldev.com/15631/python-multiprocessing-example
-        self.interval_time, self.original_time = time(), time()
-        iterations = 0
-        num_threads = 4
-
-        # total = len(queue)
-        while True:
-            procs = []
-            message_ids = sample(range(self.total), chunksize)
-            with Pool(num_threads) as pool:
-                results = pool.map(self.message_to_db, message_ids)
-
-            # for message_id in message_ids:
-            #     proc = Process(target=self.message_to_db, args=(message_id,))
-            #     procs.append(proc)
-            # [x.start() for x in procs]
-
-            iterations += 1
-            self.status_update(iterations * chunksize, self.total)
-
-            #     proc.start()
-            # for proc in procs:
-            #     proc.join()
-
+        data = self.get_message_data(message_id)
+        self.to_table(pd.DataFrame([data]), "ihub.message_sentiment")
 
 if __name__ == "__main__":
 
@@ -148,10 +204,11 @@ if __name__ == "__main__":
     # good post
     # message_id = 144689616
     # non-existant-post
-    # message_id=154689616
+    # message_id = 254689616
     # other board
     # message_id = 144802665
     # message_id = 77864629
+    # message_id = 153009616
 
     # message_ids = [77864629,144802665,154689616,144689616,144689607]
 
@@ -161,7 +218,9 @@ if __name__ == "__main__":
     # soup = BeautifulSoup(content, "lxml")
     # d = pd.to_datetime(soup.find_all(id="ctl00_CP1_mh1_lblDate")[0].text)
 
-    s = IhubSentiment()
+    s = IhubSentiment(verbose = 1)
+    # data = s.get_message_data(message_id)
+    # s.message_to_db(message_id)
     s.add_messages()
     # s.add_messages_mp(chunksize=100)
     # x = s.get_queue()
