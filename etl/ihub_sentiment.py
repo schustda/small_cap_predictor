@@ -187,7 +187,7 @@ class IhubSentiment(GeneralFunctions):
                 try:
                     self.verboseprint(message_id)
                     self.message_to_db(message_id)
-                    sleep(randint(2,6))
+                    sleep(randint(2,4))
                 except Exception as e:
                     print(e)
                     sleep(60)
