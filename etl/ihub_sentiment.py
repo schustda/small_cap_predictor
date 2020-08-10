@@ -123,7 +123,7 @@ class IhubSentiment(GeneralFunctions):
                 'message' : "ctl00_CP1_mbdy_dv"
             
                 # Where to extract the post number for the specific board the message is on
-                ,'post_number' : "ctl00_CP1_mh1_hlReply"
+                ,'post_number' : "ctl00_CP1_mh1_tbPost"
             
                 # Finds the date the message was posted
                 ,'message_date' : "ctl00_CP1_mh1_lblDate"
@@ -169,7 +169,7 @@ class IhubSentiment(GeneralFunctions):
                     output['sentiment_polarity'], output['sentiment_subjectivity'] = tb.sentiment
                 if id_type == 'post_number':
                     # Number from string, from: https://tinyurl.com/unazhvl
-                    output['post_number'] = [int(x) for x in data.text.split() if x.isdigit()][0]
+                    output['post_number'] = int(data.get('value',0))
                 if id_type == 'message_date':
                     output['message_date'] = pd.to_datetime(data.text)
                 if id_type == 'ihub_code':
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     s = IhubSentiment(verbose = 1)
     # data = s.get_message_data(message_id)
     # s.message_to_db(message_id)
-    s.add_messages()
+    # s.add_messages()
     # s.add_messages_mp(chunksize=100)
     # x = s.get_queue()
     # s.add_messages()
