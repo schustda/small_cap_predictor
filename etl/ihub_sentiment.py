@@ -222,7 +222,7 @@ if __name__ == "__main__":
     s = IhubSentiment(verbose = 1)
     # data = s.get_message_data(message_id)
     # s.message_to_db(message_id)
-    # s.add_messages()
+    s.add_messages()
     # s.add_messages_mp(chunksize=100)
     # x = s.get_queue()
     # s.add_messages()
