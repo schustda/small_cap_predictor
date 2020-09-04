@@ -12,7 +12,7 @@ from multiprocessing import Process, Pool
 class IhubSentiment(GeneralFunctions):
     def __init__(self, verbose=0):
         super().__init__(verbose)
-        self.total = 153009616
+        self.total = self.get_value('most_recent_post')
         self.bad_page_count = 0
         self.headers = {
             "User-Agent": 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
@@ -168,7 +168,6 @@ class IhubSentiment(GeneralFunctions):
                     tb = TextBlob(body)
                     output['sentiment_polarity'], output['sentiment_subjectivity'] = tb.sentiment
                 if id_type == 'post_number':
-                    # Number from string, from: https://tinyurl.com/unazhvl
                     output['post_number'] = int(data.get('value',0))
                 if id_type == 'message_date':
                     output['message_date'] = pd.to_datetime(data.text)
@@ -222,7 +221,7 @@ if __name__ == "__main__":
     s = IhubSentiment(verbose = 1)
     # data = s.get_message_data(message_id)
     # s.message_to_db(message_id)
-    s.add_messages()
+    # s.add_messages()
     # s.add_messages_mp(chunksize=100)
     # x = s.get_queue()
     # s.add_messages()
